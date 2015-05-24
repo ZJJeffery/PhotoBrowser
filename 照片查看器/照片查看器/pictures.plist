@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<array>
+	<dict>
+		<key>small</key>
+		<string>http://ww4.sinaimg.cn/thumbnail/a28691a9jw1esbng4072oj20e60a7myf.jpg</string>
+		<key>large</key>
+		<string>http://ww4.sinaimg.cn/large/a28691a9jw1esbng4072oj20e60a7myf.jpg</string>
+	</dict>
+	<dict>
+		<key>small</key>
+		<string>http://ww2.sinaimg.cn/thumbnail/c1d5d7d6gw1esb41orwbfj20dl0dljsr.jpg</string>
+		<key>large</key>
+		<string>http://ww2.sinaimg.cn/large/c1d5d7d6gw1esb41orwbfj20dl0dljsr.jpg</string>
+	</dict>
+	<dict>
+		<key>small</key>
+		<string>http://ww1.sinaimg.cn/thumbnail/6cd6d028jw1esbneltcamj20go09e0sv.jpg</string>
+		<key>large</key>
+		<string>http://ww1.sinaimg.cn/large/6cd6d028jw1esbneltcamj20go09e0sv.jpg</string>
+	</dict>
+	<dict>
+		<key>small</key>
+		<string>http://ww3.sinaimg.cn/thumbnail/95210491jw1esbndq6dqrj20d00e274y.jpg</string>
+		<key>large</key>
+		<string>http://ww3.sinaimg.cn/large/95210491jw1esbndq6dqrj20d00e274y.jpg</string>
+	</dict>
+	<dict>
+		<key>small</key>
+		<string>http://ww3.sinaimg.cn/thumbnail/61e6c012jw1esbncijcacj20r80i2wg1.jpg</string>
+		<key>large</key>
+		<string>http://ww3.sinaimg.cn/large/61e6c012jw1esbncijcacj20r80i2wg1.jpg</string>
+	</dict>
+	<dict>
+		<key>small</key>
+		<string>http://ww3.sinaimg.cn/thumbnail/61e6c012jw1esbncio5p1j20r80i2wfu.jpg</string>
+		<key>large</key>
+		<string>http://ww3.sinaimg.cn/large/61e6c012jw1esbncio5p1j20r80i2wfu.jpg</string>
+	</dict>
+	<dict>
+		<key>small</key>
+		<string>http://ww3.sinaimg.cn/thumbnail/61e6c012jw1esbncirzykj20r80i2mys.jpg</string>
+		<key>large</key>
+		<string>http://ww3.sinaimg.cn/large/61e6c012jw1esbncirzykj20r80i2mys.jpg</string>
+	</dict>
+	<dict>
+		<key>small</key>
+		<string>http://ww2.sinaimg.cn/thumbnail/6bb5acb8jw1esbzou7uixj20hs3konaq.jpg</string>
+		<key>large</key>
+		<string>http://ww2.sinaimg.cn/large/6bb5acb8jw1esbzou7uixj20hs3konaq.jpg</string>
+	</dict>
+	<dict>
+		<key>small</key>
+		<string>http://ww2.sinaimg.cn/thumbnail/005M4DfQjw1escctnq9c9j30c834rtk8.jpg</string>
+		<key>large</key>
+		<string>http://ww2.sinaimg.cn/large/005M4DfQjw1escctnq9c9j30c834rtk8.jpg</string>
+	</dict>
+</array>
+</plist>
