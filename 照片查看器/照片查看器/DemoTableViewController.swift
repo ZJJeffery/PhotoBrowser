@@ -9,7 +9,24 @@
 import UIKit
 
 class DemoTableViewController: UITableViewController {
+    /// 图片资源
+    lazy var photoes : [Picture] = {
+        let pList = Picture.picturesList()
+        return pList
+    }()
 
+    lazy var dataList : [[Picture]]? = {
+        var result = [[Picture]]()
+        for i in 1..<10 {
+            var list = [Picture]()
+            for x in 0..<i {
+                list.append(self.photoes[x])
+            }
+            result.append(list)
+        }
+        return result
+    }()
+    
     override func viewDidLoad() {
         super.viewDidLoad()
     }
@@ -21,7 +38,7 @@ class DemoTableViewController: UITableViewController {
     }
 
     override func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return 1
+        return self.dataList?.count ?? 0
     }
 
     
@@ -30,6 +47,7 @@ class DemoTableViewController: UITableViewController {
         if !(childViewControllers as NSArray).containsObject(cell.photoVC!) {
             addChildViewController(cell.photoVC!)
         }
+        cell.photoes = self.dataList![indexPath.row] as [Picture]
         return cell
     }
 }

@@ -142,7 +142,6 @@ extension SinglePhotoBrowserViewController : UIScrollViewDelegate {
     
     func scrollViewDidZoom(scrollView: UIScrollView) {
         let scale = imageView.transform.a
-        println(self.scrollView.contentOffset)
         // 根据偏移量保持图片中心对齐
         scrollView.contentOffset = calculateContentOffset()
         NSNotificationCenter.defaultCenter().postNotificationName(PhotoBrowserDidScaleNotification, object: nil, userInfo: ["scale" : scale])
