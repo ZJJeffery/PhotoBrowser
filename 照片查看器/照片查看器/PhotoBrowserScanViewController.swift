@@ -95,7 +95,7 @@ class PhotoBrowserScanViewController: UIViewController {
     // 注册通知
     private func regiserNotification(){
         // 注册开始转场动画通知
-        NSNotificationCenter.defaultCenter().addObserver(self, selector:"dismissAnimation:", name: PhotoBrowserStartDismissNotification, object: nil)
+        NSNotificationCenter.defaultCenter().addObserver(self, selector:"normalDismiss:", name: PhotoBrowserStartDismissNotification, object: nil)
         // 注册结束转场动画通知
         NSNotificationCenter.defaultCenter().addObserver(self, selector:"interactiveDismissAnimation:", name: PhotoBrowserStartInteractiveDismissNotification, object: nil)
     }
@@ -137,7 +137,6 @@ class PhotoBrowserScanViewController: UIViewController {
             endFrameList.append(endFrame)
         }
         // 存储frame数组
-        println(endFrameList)
         self.startFrameList = startFrameList
         self.endFrameList = endFrameList
     }
@@ -195,13 +194,12 @@ class PhotoBrowserScanViewController: UIViewController {
     // 坐标转换
     private func cellStartFrameRelativeToMainScreen(cell : PhotoCell) ->CGRect {
         let frame = cell.convertRect(cell.bounds, toCoordinateSpace: UIScreen.mainScreen().fixedCoordinateSpace)
-        println(frame)
         return frame
     }
     // 根据cell 计算cell对于主屏幕的frame
     private func cellEndFrame(cell : PhotoCell) ->CGRect {
         let image = cell.imageView!.image!
-        let size = scaleImageSize(image, relateToWidth: UIScreen.mainScreen().bounds.size.width)
+        var size = scaleImageSize(image, relateToWidth: UIScreen.mainScreen().bounds.size.width)
         let y = (UIScreen.mainScreen().bounds.height - size.height) * 0.5
         return CGRectMake(0, y, size.width, size.height)
     }
@@ -221,28 +219,56 @@ class PhotoBrowserScanViewController: UIViewController {
     }
     
     // 常规dismiss动画
-    func dismissAnimation(n : NSNotification) {
+    func normalDismiss(n : NSNotification) {
         // 根据通知得知正在看第几个图
         let index = n.userInfo!["index"] as! Int
-        // 转换坐标系
+        // 坐标
         let endFrame = endFrameList![index]
         let startFrame = startFrameList![index]
+        // 动画
+        dismissAnimation(startFrame, endFrame: endFrame, url: self.smallURLList![index], scale: 1)
+    }
+    // 交互式dismiss动画
+
+    func interactiveDismissAnimation(n : NSNotification) {
+        // 当前缩放比例
+        let scale = n.userInfo!["scale"] as! CGFloat
+        // 当前图片索引
+        let index = (n.object as! NSNumber).integerValue
+        // 坐标
+        let endFrame = endFrameList![index]
+        let startFrame = startFrameList![index]
+        // 动画
+        dismissAnimation(startFrame, endFrame: endFrame, url: self.smallURLList![index], scale: scale)
+    }
+    private func dismissAnimation(startFrame: CGRect, endFrame: CGRect, url : NSURL, scale : CGFloat){
         // 创建图片展示正在回去的图片
         let imageView = UIImageView(frame: endFrame)
-        imageView.sd_setImageWithURL(self.smallURLList![index])
+        imageView.clipsToBounds = true
+        imageView.sd_setImageWithURL(url)
+        // 确定高度
+        var height = endFrame.height * scale
+        // 统一计算位置
+        imageView.frame = CGRectMake(0, 0, endFrame.width * scale, height)
+        imageView.center = CGPointMake(UIScreen.mainScreen().bounds.width * CGFloat(0.5), UIScreen.mainScreen().bounds.height * CGFloat(0.5))
         // 如果是长图，限制大小
         if endFrame.height > UIScreen.mainScreen().bounds.height {
-            imageView.bounds = UIScreen.mainScreen().bounds
-            // 先拉伸小图，然后填充
-            imageView.contentMode = UIViewContentMode.ScaleToFill
+            // Top属性
+            imageView.contentMode = UIViewContentMode.Top
+            // 大小设定
+            let width = endFrame.width * scale
+            let x = (UIScreen.mainScreen().bounds.width - width) * 0.5
+            let y = x
+            height = UIScreen.mainScreen().bounds.height - y
+            imageView.frame = CGRectMake(x, y, width, height)
         }else{
             imageView.contentMode = UIViewContentMode.ScaleAspectFill
         }
-        imageView.clipsToBounds = true
+        
         // 遮罩
         let backView = UIView(frame: UIScreen.mainScreen().bounds)
         backView.backgroundColor = UIColor.blackColor()
-        backView.alpha = 1
+        backView.alpha = scale
         UIApplication.sharedApplication().keyWindow?.addSubview(backView)
         UIApplication.sharedApplication().keyWindow?.addSubview(imageView)
         // 开始动画
@@ -250,53 +276,16 @@ class PhotoBrowserScanViewController: UIViewController {
             // 获得需要回去的frame
             imageView.frame = startFrame
             backView.alpha = 0
-            // 为长图缩放小的比例做准备
-            imageView.contentMode = UIViewContentMode.ScaleAspectFill
             }, completion: {(finish) -> Void in
                 // 移除动画视图
                 imageView.removeFromSuperview()
+                backView.removeFromSuperview()
                 // 发送结束动画通知
                 NSNotificationCenter.defaultCenter().postNotificationName(PhotoBrowserEndDismissNotification, object: nil)
                 // 结束监听通知
                 self.removeNotification()
         })
-    }
-    // 交互式dismiss动画
-    func interactiveDismissAnimation(n : NSNotification) {
-        // 当前缩放比例
-        let scale = n.userInfo!["scale"] as! CGFloat
-        // 当前图片索引
-        let index = (n.object as! NSNumber).integerValue
-        
-        // 动画图片视图
-        let imageView = UIImageView()
-        imageView.sd_setImageWithURL(smallURLList![index])
-        imageView.contentMode = UIViewContentMode.ScaleAspectFill
-        
-        // 计算当前frame
-        let endFrame = endFrameList![index]
-        imageView.frame = CGRectMake(0, 0, endFrame.width * scale, endFrame.height * scale)
-        imageView.center = CGPointMake(UIScreen.mainScreen().bounds.width * CGFloat(0.5), UIScreen.mainScreen().bounds.height * CGFloat(0.5))
-        
-        // 遮罩
-        let backView = UIView(frame: UIScreen.mainScreen().bounds)
-        backView.alpha = scale
-        // 添加到视图
-        UIApplication.sharedApplication().keyWindow?.addSubview(backView)
-        UIApplication.sharedApplication().keyWindow?.addSubview(imageView)
-        // 按比例计算剩余动画时长
-        let duration = AnimationDuration * NSTimeInterval(scale)
-        // 开始动画
-        UIView.animateWithDuration(duration, animations: { () -> Void in
-            imageView.frame = self.startFrameList![index]
-            backView.alpha = 0
-            }) { (_) -> Void in
-                // 移除图片
-                imageView.removeFromSuperview()
-                backView.removeFromSuperview()
-                // 结束监听通知
-                self.removeNotification()
-        }
+
     }
     // 根据给定的frame, 计算center坐标
     private func calculateCenterPointWithRect(rect : CGRect) -> CGPoint {
@@ -309,11 +298,9 @@ class PhotoBrowserScanViewController: UIViewController {
 extension PhotoBrowserScanViewController : UICollectionViewDataSource {
 
     func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        let count = self.smallURLList?.count ?? 0
-        println(count)
-        // 计算view的大小
+        // 计算自动布局
         calculateViewSize()
-        return count
+        return self.smallURLList?.count ?? 0
     }
     
     func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell {
@@ -355,7 +342,7 @@ extension PhotoBrowserScanViewController : UICollectionViewDelegate {
         imageView.sd_setImageWithURL(smallURLList![indexPath.item])
         if endFrame.height > UIScreen.mainScreen().bounds.height {
             // 拉伸小图，填充
-            imageView.contentMode = UIViewContentMode.ScaleToFill
+            imageView.contentMode = UIViewContentMode.Top
             endFrame = UIScreen.mainScreen().bounds
         }else{
             imageView.contentMode = UIViewContentMode.ScaleAspectFill
@@ -366,23 +353,24 @@ extension PhotoBrowserScanViewController : UICollectionViewDelegate {
         UIApplication.sharedApplication().keyWindow?.addSubview(imageView)
         // 准备跳转
         modalVC.view.alpha = 0
-        mk_presentViewController(modalVC, withPresentFrame: UIScreen.mainScreen().bounds, withPresentAnimation: { (_) -> NSTimeInterval in
+        self.mk_presentViewController(modalVC, withPresentFrame: UIScreen.mainScreen().bounds, withPresentAnimation: { (_) -> NSTimeInterval in
             return 0.0
-            }, withDismissAnimation: { (_) -> NSTimeInterval in
-                return 0.0
-            }) { () -> Void in
-                self.view.userInteractionEnabled = false
-                UIView.animateWithDuration(self.AnimationDuration, animations: { () -> Void in
-                    imageView.frame = endFrame
-                    // 小图填充后显示最核心部分
-                    imageView.contentMode = UIViewContentMode.ScaleAspectFill
-                    backView.alpha = 1
-                    }, completion: { (_) -> Void in
-                        modalVC.view.alpha = 1
-                        imageView.removeFromSuperview()
-                        backView.removeFromSuperview()
-                        self.view.userInteractionEnabled = true
-                })
+        }, withDismissAnimation: { (_) -> NSTimeInterval in
+            return 0.0
+        }) { () -> Void in
+            UIView.animateWithDuration(self.AnimationDuration, animations: { () -> Void in
+                imageView.frame = endFrame
+                backView.alpha = 1
+            }, completion: { (_) -> Void in
+                modalVC.view.alpha = 1
+                imageView.removeFromSuperview()
+                backView.removeFromSuperview()
+                if !(SDWebImageManager.sharedManager().cachedImageExistsForURL(modalVC.largeImageURLList![indexPath.item])) {
+                    SVProgressHUD.show()
+                }
+                self.view.userInteractionEnabled = true
+
+            })
         }
     }
 }

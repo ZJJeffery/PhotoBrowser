@@ -29,15 +29,13 @@ class SinglePhotoBrowserViewController: UIViewController {
     }()
     var largeURL : NSURL? {
         didSet {
-//            // 清除原有的图片
-//            imageView.image = nil
+            // 清除原有的图片
             // 判断图片是否缓存
             if !(SDWebImageManager.sharedManager().cachedImageExistsForURL(largeURL)) {
                 SDWebImageManager.sharedManager().downloadImageWithURL(smallURL, options: SDWebImageOptions(0), progress: nil, completed: { (image, error, _, _, _) -> Void in
                     self.imageView.image = image
                     self.setUpImage(image)
                 })
-                SVProgressHUD.show()
             }
             SDWebImageManager.sharedManager().downloadImageWithURL(largeURL, options: SDWebImageOptions(0), progress: nil) { (image, error, _, _, _) -> Void in
                 if error != nil {
@@ -136,7 +134,6 @@ class SinglePhotoBrowserViewController: UIViewController {
     //MARK: - 代理方法
 extension SinglePhotoBrowserViewController : UIScrollViewDelegate {
     func viewForZoomingInScrollView(scrollView: UIScrollView) -> UIView? {
-        imageView.layer.anchorPoint = CGPointMake(0.5, 0.5)
         return imageView
     }
     
@@ -151,6 +148,8 @@ extension SinglePhotoBrowserViewController : UIScrollViewDelegate {
         
         if scale < 1.0 {
             let bounds = imageView.bounds
+            self.view.superview?.alpha = 0
+            NSNotificationCenter.defaultCenter().postNotificationName(PhotoBrowserDidScaleNotification, object: nil, userInfo: ["scale" : 0])
             NSNotificationCenter.defaultCenter().postNotificationName(PhotoBrowserStartInteractiveDismissNotification, object: NSNumber(integer: index!), userInfo: ["scale" : scale])
             dismissViewControllerAnimated(true, completion: nil)
         }else{
