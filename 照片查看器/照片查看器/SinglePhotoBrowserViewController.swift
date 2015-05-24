@@ -143,13 +143,14 @@ extension SinglePhotoBrowserViewController : UIScrollViewDelegate {
         scrollView.contentOffset = calculateContentOffset()
         NSNotificationCenter.defaultCenter().postNotificationName(PhotoBrowserDidScaleNotification, object: nil, userInfo: ["scale" : scale])
     }
-    
+    func scrollViewWillEndDragging(scrollView: UIScrollView, withVelocity velocity: CGPoint, targetContentOffset: UnsafeMutablePointer<CGPoint>) {
+        if imageView.transform.a < 1.0 {
+            imageView.hidden = true
+            scrollView.contentOffset = calculateContentOffset()
+        }
+    }
     func scrollViewDidEndZooming(scrollView: UIScrollView, withView view: UIView!, atScale scale: CGFloat) {
-        
         if scale < 1.0 {
-            let bounds = imageView.bounds
-            self.view.superview?.alpha = 0
-            NSNotificationCenter.defaultCenter().postNotificationName(PhotoBrowserDidScaleNotification, object: nil, userInfo: ["scale" : 0])
             NSNotificationCenter.defaultCenter().postNotificationName(PhotoBrowserStartInteractiveDismissNotification, object: NSNumber(integer: index!), userInfo: ["scale" : scale])
             dismissViewControllerAnimated(true, completion: nil)
         }else{

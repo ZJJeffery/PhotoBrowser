@@ -21,19 +21,19 @@ class PhotoCell: UICollectionViewCell {
     
     var url : NSURL? {
         didSet {
-            SDWebImageManager.sharedManager().downloadImageWithURL(url, options: SDWebImageOptions.allZeros, progress: nil) { (image, error, _, _, _) -> Void in
-                if image == nil && error != nil{
-                    println(error)
-                    // 设置错误图片
-                    return
-                }
-                if self.isLongImage(image) {
-                    self.imageView!.contentMode = UIViewContentMode.Top
-                }else{
-                    self.imageView!.contentMode = UIViewContentMode.ScaleAspectFill
-                }
-                self.imageView!.image = image
-            }
+//            SDWebImageManager.sharedManager().downloadImageWithURL(url, options: SDWebImageOptions.allZeros, progress: nil) { (image, error, _, _, _) -> Void in
+//                if image == nil && error != nil{
+//                    println(error)
+//                    // 设置错误图片
+//                    return
+//                }
+//                if self.isLongImage(image) {
+//                    self.imageView!.contentMode = UIViewContentMode.Top
+//                }else{
+//                    self.imageView!.contentMode = UIViewContentMode.ScaleAspectFill
+//                }
+//                self.imageView!.image = image
+//            }
             imageView!.sd_setImageWithURL(url)
         }
     }

@@ -32,7 +32,7 @@ private let reusedId = "photoCell"
 class PhotoBrowserScanViewController: UIViewController {
     //MARK: 属性
     // 动画时长
-    let AnimationDuration = 0.5 as NSTimeInterval
+    let AnimationDuration = 0.3 as NSTimeInterval
     /// 布局约束
     var layout : UICollectionViewFlowLayout = UICollectionViewFlowLayout()
     /// 图片视图
@@ -199,8 +199,11 @@ class PhotoBrowserScanViewController: UIViewController {
     // 根据cell 计算cell对于主屏幕的frame
     private func cellEndFrame(cell : PhotoCell) ->CGRect {
         let image = cell.imageView!.image!
-        var size = scaleImageSize(image, relateToWidth: UIScreen.mainScreen().bounds.size.width)
-        let y = (UIScreen.mainScreen().bounds.height - size.height) * 0.5
+        var size = scaleImageSize(image, relateToWidth: UIScreen.mainScreen().bounds.width)
+        var y = (UIScreen.mainScreen().bounds.height - size.height) * 0.5
+        if size.height > UIScreen.mainScreen().bounds.height {
+            y = 0
+        }
         return CGRectMake(0, y, size.width, size.height)
     }
     // 计算图片缩放根据给定的宽度
@@ -254,16 +257,16 @@ class PhotoBrowserScanViewController: UIViewController {
         // 如果是长图，限制大小
         if endFrame.height > UIScreen.mainScreen().bounds.height {
             // Top属性
-            imageView.contentMode = UIViewContentMode.Top
+//            imageView.contentMode = UIViewContentMode.Top
             // 大小设定
             let width = endFrame.width * scale
             let x = (UIScreen.mainScreen().bounds.width - width) * 0.5
             let y = x
             height = UIScreen.mainScreen().bounds.height - y
+            height = endFrame.height - y
             imageView.frame = CGRectMake(x, y, width, height)
-        }else{
-            imageView.contentMode = UIViewContentMode.ScaleAspectFill
         }
+        imageView.contentMode = UIViewContentMode.ScaleAspectFill
         
         // 遮罩
         let backView = UIView(frame: UIScreen.mainScreen().bounds)
@@ -340,13 +343,7 @@ extension PhotoBrowserScanViewController : UICollectionViewDelegate {
         let imageView = UIImageView(frame: startFrame)
         var endFrame = endFrameList![indexPath.item]
         imageView.sd_setImageWithURL(smallURLList![indexPath.item])
-        if endFrame.height > UIScreen.mainScreen().bounds.height {
-            // 拉伸小图，填充
-            imageView.contentMode = UIViewContentMode.Top
-            endFrame = UIScreen.mainScreen().bounds
-        }else{
-            imageView.contentMode = UIViewContentMode.ScaleAspectFill
-        }
+        imageView.contentMode = UIViewContentMode.ScaleAspectFill
         imageView.clipsToBounds = true
         // 将遮罩添加到window
         UIApplication.sharedApplication().keyWindow?.addSubview(backView)
