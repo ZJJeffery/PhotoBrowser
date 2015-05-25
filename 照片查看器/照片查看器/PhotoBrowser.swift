@@ -401,207 +401,52 @@ extension PhotoBrowserScanViewController : UICollectionViewDelegate {
         presentAnimation(indexPath)
     }
 }
-
 /** 单小图图展示Cell
-    简单地小图展示Cell，主要展示小图，并且传递接受大图，小图的URL传递给需要展示的下面的控制器
+简单地小图展示Cell，主要展示小图，并且传递接受大图，小图的URL传递给需要展示的下面的控制器
 */
-//MARK: - 单小图图展示Cell
-class PhotoBrowserCell: UICollectionViewCell {
+//MARK: - 展示单张小图图片的cell
+class PhotoCell: UICollectionViewCell {
     //MARK: - 属性
-    /// 查看照片控制器
-    var viewerVC: SinglePhotoBrowserViewController?
-    
-    /// 要显示的图片的 URL
-    var largeURL: NSURL? {
-        didSet {
-            viewerVC?.largeURL = largeURL
-        }
-    }
-    /// 要显示的图片的小图 URL
-    var smallURL: NSURL? {
-        didSet {
-            viewerVC?.smallURL = smallURL
-        }
-    }
-    /// 要显示的图片的小图 URL
-    var index: Int? {
-        didSet {
-            viewerVC?.index = index
-        }
-    }
-    //MARK: - 构造方法
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-        // 创建视图控制器
-        viewerVC = SinglePhotoBrowserViewController()
-        viewerVC?.view.frame = bounds
-        // 添加视图
-        self.addSubview(viewerVC!.view)
-    }
-    required init(coder aDecoder: NSCoder) {
-        super.init(coder: aDecoder)
-    }
-}
-
-//MARK: - 处理单张图片的控制器
-class SinglePhotoBrowserViewController: UIViewController {
-    //MARK: - 属性
-    /// 滚动视图
-    lazy var scrollView : UIScrollView = {
-        let sv = UIScrollView(frame: UIScreen.mainScreen().bounds)
-        // 设置代理
-        sv.delegate = self
-        // 最小大缩放比例
-        sv.minimumZoomScale = 0.5
-        sv.maximumZoomScale = 2.0
-        return sv
+    /// 展示图像视图
+    lazy var imageView : UIImageView? = {
+        let imageView = UIImageView()
+        imageView.contentMode = UIViewContentMode.ScaleAspectFill
+        imageView.clipsToBounds = true
+        self.addSubview(imageView)
+        return imageView
         }()
-    /// 图像视图
-    lazy var imageView : UIImageView = {
-        let iv = UIImageView()
-        return iv
-        }()
-    var largeURL : NSURL? {
+    /// 图像地址
+    var url : NSURL? {
         didSet {
-            // 清除原有的图片
-            // 判断图片是否缓存
-            if !(SDWebImageManager.sharedManager().cachedImageExistsForURL(largeURL)) {
-                SDWebImageManager.sharedManager().downloadImageWithURL(smallURL, options: SDWebImageOptions(0), progress: nil, completed: { (image, error, _, _, _) -> Void in
-                    self.imageView.image = image
-                    self.setUpImage(image)
-                })
-            }
-            SDWebImageManager.sharedManager().downloadImageWithURL(largeURL, options: SDWebImageOptions(0), progress: nil) { (image, error, _, _, _) -> Void in
-                if error != nil {
-                    SVProgressHUD.showErrorWithStatus("网络不给力")
-                    SVProgressHUD.dismiss()
-                    return
-                }
-                // 设置图片
-                self.imageView.image = image
-                self.setUpImage(image)
-                SVProgressHUD.dismiss()
-            }
+            imageView!.sd_setImageWithURL(url)
         }
     }
-    // 小图URL
-    var smallURL : NSURL?
-    // 当前索引
-    var index : Int?
-    
-    //MARK: - 内部方法
-    override func loadView() {
-        view = UIView(frame: UIScreen.mainScreen().bounds)
-        view.addSubview(scrollView)
-        scrollView.addSubview(imageView)
-        // 设置SVProgressHUD
-        setSVProgressHUD()
-    }
-    override func viewDidDisappear(animated: Bool) {
-        super.viewDidDisappear(animated)
-        SVProgressHUD.dismiss()
-    }
-    //MARK: - 功能方法
-    // 设置SVProgressHUD样式
-    private func setSVProgressHUD(){
-        SVProgressHUD.setBackgroundColor(UIColor(red: 0, green: 0, blue: 0, alpha: 0.5))
-        SVProgressHUD.setForegroundColor(UIColor.whiteColor())
-        SVProgressHUD.setRingThickness(8.0)
-    }
-    // 重置scrollView属性
-    private func resetScrollView() {
-        scrollView.contentSize = CGSizeZero
-        scrollView.contentOffset = CGPointZero
-        scrollView.contentInset = UIEdgeInsetsZero
-        imageView.transform = CGAffineTransformIdentity
-    }
-    // 设置图片
-    private func setUpImage(image : UIImage) {
-        // 重置
-        resetScrollView()
-        // 缩放大小
-        let size = scaleImageSize(image)
-        // 设置属性
-        self.imageView.frame = CGRectMake(0, 0, size.width, size.height)
-        // 判断长短图
-        var top : CGFloat
-        if size.height > view.frame.height {
-            // 长图
-            top = 0
-        } else {
-            // 短图
-            top = (view.frame.size.height - size.height) * 0.5
+    // 功能方法
+    // 判断长短图
+    private func isLongImage(image : UIImage) -> Bool{
+        let size = scaleImageSize(image, relateToWidth: UIScreen.mainScreen().bounds.width)
+        if size.height > UIScreen.mainScreen().bounds.height {
+            return true
         }
-        // 设置contentInset
-        scrollView.contentSize = size
-        scrollView.contentInset = UIEdgeInsetsMake(top, 0, 0, 0)
+        return false
     }
-    // 计算图片缩放
-    private func scaleImageSize(image : UIImage) -> CGSize {
+    // 计算图片缩放根据给定的宽度
+    private func scaleImageSize(image : UIImage, relateToWidth width: CGFloat) -> CGSize {
         let imageW = image.size.width
         let imageH = image.size.height
-        let screenW = UIScreen.mainScreen().bounds.width
-        let scaleH = screenW * imageH / imageW
-        return CGSizeMake(screenW, scaleH)
+        let scaleH = width * imageH / imageW
+        return CGSizeMake(width, scaleH)
     }
-    // 判断图片的缩放便宜
-    private func calculateContentOffset() -> CGPoint{
-        // 根据图像的目前大小计算需要偏移的contentOffset
-        var offsety : CGFloat
-        var offsetx : CGFloat
-        // 判断图片的高度是否已经超出屏幕，超出屏幕按照默认的contentOffset
-        if imageView.frame.height > UIScreen.mainScreen().bounds.height {
-            offsety = scrollView.contentOffset.y //y值不变，直接保持即可
-        }else{
-            offsety = (imageView.frame.height - UIScreen.mainScreen().bounds.height) * CGFloat(0.5)
-        }
-        
-        // 判断图片的宽度是否已经超出屏幕，超出屏幕按照默认的contentOffset
-        if imageView.frame.width > UIScreen.mainScreen().bounds.width {
-            offsetx = scrollView.contentOffset.x //y值不变，直接保持即可
-        }else{
-            offsetx = (imageView.frame.width - UIScreen.mainScreen().bounds.width) * CGFloat(0.5)
-        }
-        return CGPointMake(offsetx, offsety)
+    //MARK: - 内部方法
+    // 布局内部图像视图
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        imageView?.frame = self.bounds
     }
 }
-//MARK: - UIScrollViewDelegate代理方法
-extension SinglePhotoBrowserViewController : UIScrollViewDelegate {
-    func viewForZoomingInScrollView(scrollView: UIScrollView) -> UIView? {
-        return imageView
-    }
-    
-    func scrollViewDidZoom(scrollView: UIScrollView) {
-        let scale = imageView.transform.a
-        // 根据偏移量保持图片中心对齐
-        scrollView.contentOffset = calculateContentOffset()
-        // 发送缩放通知
-        NSNotificationCenter.defaultCenter().postNotificationName(PhotoBrowserDidScaleNotification, object: nil, userInfo: ["scale" : scale, "index" : index!])
-    }
-    
-    func scrollViewWillEndDragging(scrollView: UIScrollView, withVelocity velocity: CGPoint, targetContentOffset: UnsafeMutablePointer<CGPoint>) {
-        if imageView.transform.a < dismissScale {
-            imageView.hidden = true
-            scrollView.contentOffset = calculateContentOffset()
-        }
-    }
-    func scrollViewDidEndZooming(scrollView: UIScrollView, withView view: UIView!, atScale scale: CGFloat) {
-        if scale < dismissScale {
-            NSNotificationCenter.defaultCenter().postNotificationName(PhotoBrowserStartInteractiveDismissNotification, object: nil, userInfo: ["scale" : scale, "index" : index!])
-            dismissViewControllerAnimated(false, completion: nil)
-            return
-        }
-        // 重新调整图像的间距
-        // 计算顶部的间距值
-        let top = (scrollView.frame.height - view.frame.height) * 0.5
-        if top > 0 {
-            scrollView.contentInset = UIEdgeInsetsMake(top, 0, 0, 0)
-            return
-        }
-        // top < 0 说明图片放大的结果，已经超出了 scrollView
-        scrollView.contentInset = UIEdgeInsetsMake(0, 0, 0, 0)
-    }
-}
+/** 展示全部图片的控制器
+    通过小图和大图数组，可以动态展示所有的图片，同时根据接受的通知，改变自己的背景图片的alpha值，从而产生交互式转场的效果。
+*/
 //MARK: - 展示全部图片的控制器
 class PhotoBrowserViewController: UIViewController {
     //MARK: - 属性
@@ -735,44 +580,212 @@ extension PhotoBrowserViewController: UICollectionViewDataSource {
         return cell
     }
 }
-
-//MARK: - 展示单张图片的cell
-class PhotoCell: UICollectionViewCell {
+/** 单大图图展示Cell
+    通过传递单图处理的控制器，其他的实现都是通过控制器内部实现，cell只是起到了重用和组织的作用
+*/
+//MARK: - 单大图图展示Cell
+class PhotoBrowserCell: UICollectionViewCell {
     //MARK: - 属性
-    /// 展示图像视图
-    lazy var imageView : UIImageView? = {
-        let imageView = UIImageView()
-        imageView.contentMode = UIViewContentMode.ScaleAspectFill
-        imageView.clipsToBounds = true
-        self.addSubview(imageView)
-        return imageView
-        }()
-    /// 图像地址
-    var url : NSURL? {
+    /// 查看照片控制器
+    var viewerVC: SinglePhotoBrowserViewController?
+    
+    /// 要显示的图片的 URL
+    var largeURL: NSURL? {
         didSet {
-            imageView!.sd_setImageWithURL(url)
+            viewerVC?.largeURL = largeURL
         }
     }
-    // 功能方法
-    // 判断长短图
-    private func isLongImage(image : UIImage) -> Bool{
-        let size = scaleImageSize(image, relateToWidth: UIScreen.mainScreen().bounds.width)
-        if size.height > UIScreen.mainScreen().bounds.height {
-            return true
+    /// 要显示的图片的小图 URL
+    var smallURL: NSURL? {
+        didSet {
+            viewerVC?.smallURL = smallURL
         }
-        return false
     }
-    // 计算图片缩放根据给定的宽度
-    private func scaleImageSize(image : UIImage, relateToWidth width: CGFloat) -> CGSize {
+    /// 要显示的图片的小图 URL
+    var index: Int? {
+        didSet {
+            viewerVC?.index = index
+        }
+    }
+    //MARK: - 构造方法
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        // 创建视图控制器
+        viewerVC = SinglePhotoBrowserViewController()
+        viewerVC?.view.frame = bounds
+        // 添加视图
+        self.addSubview(viewerVC!.view)
+    }
+    required init(coder aDecoder: NSCoder) {
+        super.init(coder: aDecoder)
+    }
+}
+
+/** 处理单张图片的控制器
+    内部通过scrollView实现大小图放大缩小，当放大缩小的时候，处理了contentOffset的偏移实现了中心对齐
+    根据不同的比例缩放，发送不同的通知，根据scale的通知，让父视图的背景色改变实现透明穿透的交互式转场效果
+    
+    当图片缩放之后，需要自己手动从新回到初始的tranform，不然哪怕图片看着没变大，内部的imageView
+    的大小依旧是原来的大小。
+*/
+
+//MARK: - 处理单张图片的控制器
+class SinglePhotoBrowserViewController: UIViewController {
+    //MARK: - 属性
+    /// 滚动视图
+    lazy var scrollView : UIScrollView = {
+        let sv = UIScrollView(frame: UIScreen.mainScreen().bounds)
+        // 设置代理
+        sv.delegate = self
+        // 最小大缩放比例
+        sv.minimumZoomScale = 0.5
+        sv.maximumZoomScale = 2.0
+        return sv
+        }()
+    /// 图像视图
+    lazy var imageView : UIImageView = {
+        let iv = UIImageView()
+        return iv
+        }()
+    var largeURL : NSURL? {
+        didSet {
+            // 清除原有的图片
+            // 判断图片是否缓存
+            if !(SDWebImageManager.sharedManager().cachedImageExistsForURL(largeURL)) {
+                SDWebImageManager.sharedManager().downloadImageWithURL(smallURL, options: SDWebImageOptions(0), progress: nil, completed: { (image, error, _, _, _) -> Void in
+                    self.imageView.image = image
+                    self.setUpImage(image)
+                })
+            }
+            SDWebImageManager.sharedManager().downloadImageWithURL(largeURL, options: SDWebImageOptions(0), progress: nil) { (image, error, _, _, _) -> Void in
+                if error != nil {
+                    SVProgressHUD.showErrorWithStatus("网络不给力")
+                    SVProgressHUD.dismiss()
+                    return
+                }
+                // 设置图片
+                self.imageView.image = image
+                self.setUpImage(image)
+                SVProgressHUD.dismiss()
+            }
+        }
+    }
+    // 小图URL
+    var smallURL : NSURL?
+    // 当前索引
+    var index : Int?
+    
+    //MARK: - 内部方法
+    override func loadView() {
+        view = UIView(frame: UIScreen.mainScreen().bounds)
+        view.addSubview(scrollView)
+        scrollView.addSubview(imageView)
+        // 设置SVProgressHUD
+        setSVProgressHUD()
+    }
+    override func viewDidDisappear(animated: Bool) {
+        super.viewDidDisappear(animated)
+        SVProgressHUD.dismiss()
+    }
+    //MARK: - 功能方法
+    // 设置SVProgressHUD样式
+    private func setSVProgressHUD(){
+        SVProgressHUD.setBackgroundColor(UIColor(red: 0, green: 0, blue: 0, alpha: 0.5))
+        SVProgressHUD.setForegroundColor(UIColor.whiteColor())
+        SVProgressHUD.setRingThickness(8.0)
+    }
+    // 重置scrollView属性
+    private func resetScrollView() {
+        scrollView.contentSize = CGSizeZero
+        scrollView.contentOffset = CGPointZero
+        scrollView.contentInset = UIEdgeInsetsZero
+        imageView.transform = CGAffineTransformIdentity
+    }
+    // 设置图片
+    private func setUpImage(image : UIImage) {
+        // 重置
+        resetScrollView()
+        // 缩放大小
+        let size = scaleImageSize(image)
+        // 设置属性
+        self.imageView.frame = CGRectMake(0, 0, size.width, size.height)
+        // 判断长短图
+        var top : CGFloat
+        if size.height > view.frame.height {
+            // 长图
+            top = 0
+        } else {
+            // 短图
+            top = (view.frame.size.height - size.height) * 0.5
+        }
+        // 设置contentInset
+        scrollView.contentSize = size
+        scrollView.contentInset = UIEdgeInsetsMake(top, 0, 0, 0)
+    }
+    // 计算图片缩放
+    private func scaleImageSize(image : UIImage) -> CGSize {
         let imageW = image.size.width
         let imageH = image.size.height
-        let scaleH = width * imageH / imageW
-        return CGSizeMake(width, scaleH)
+        let screenW = UIScreen.mainScreen().bounds.width
+        let scaleH = screenW * imageH / imageW
+        return CGSizeMake(screenW, scaleH)
     }
-    //MARK: - 内部方法
-    // 布局内部图像视图
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        imageView?.frame = self.bounds
+    // 判断图片的缩放便宜
+    private func calculateContentOffset() -> CGPoint{
+        // 根据图像的目前大小计算需要偏移的contentOffset
+        var offsety : CGFloat
+        var offsetx : CGFloat
+        // 判断图片的高度是否已经超出屏幕，超出屏幕按照默认的contentOffset
+        if imageView.frame.height > UIScreen.mainScreen().bounds.height {
+            offsety = scrollView.contentOffset.y //y值不变，直接保持即可
+        }else{
+            offsety = (imageView.frame.height - UIScreen.mainScreen().bounds.height) * CGFloat(0.5)
+        }
+        
+        // 判断图片的宽度是否已经超出屏幕，超出屏幕按照默认的contentOffset
+        if imageView.frame.width > UIScreen.mainScreen().bounds.width {
+            offsetx = scrollView.contentOffset.x //y值不变，直接保持即可
+        }else{
+            offsetx = (imageView.frame.width - UIScreen.mainScreen().bounds.width) * CGFloat(0.5)
+        }
+        return CGPointMake(offsetx, offsety)
+    }
+}
+
+//MARK: - UIScrollViewDelegate代理方法
+extension SinglePhotoBrowserViewController : UIScrollViewDelegate {
+    func viewForZoomingInScrollView(scrollView: UIScrollView) -> UIView? {
+        return imageView
+    }
+    
+    func scrollViewDidZoom(scrollView: UIScrollView) {
+        let scale = imageView.transform.a
+        // 根据偏移量保持图片中心对齐
+        scrollView.contentOffset = calculateContentOffset()
+        // 发送缩放通知
+        NSNotificationCenter.defaultCenter().postNotificationName(PhotoBrowserDidScaleNotification, object: nil, userInfo: ["scale" : scale, "index" : index!])
+    }
+    
+    func scrollViewWillEndDragging(scrollView: UIScrollView, withVelocity velocity: CGPoint, targetContentOffset: UnsafeMutablePointer<CGPoint>) {
+        if imageView.transform.a < dismissScale {
+            imageView.hidden = true
+            scrollView.contentOffset = calculateContentOffset()
+        }
+    }
+    func scrollViewDidEndZooming(scrollView: UIScrollView, withView view: UIView!, atScale scale: CGFloat) {
+        if scale < dismissScale {
+            NSNotificationCenter.defaultCenter().postNotificationName(PhotoBrowserStartInteractiveDismissNotification, object: nil, userInfo: ["scale" : scale, "index" : index!])
+            dismissViewControllerAnimated(false, completion: nil)
+            return
+        }
+        // 重新调整图像的间距
+        // 计算顶部的间距值
+        let top = (scrollView.frame.height - view.frame.height) * 0.5
+        if top > 0 {
+            scrollView.contentInset = UIEdgeInsetsMake(top, 0, 0, 0)
+            return
+        }
+        // top < 0 说明图片放大的结果，已经超出了 scrollView
+        scrollView.contentInset = UIEdgeInsetsMake(0, 0, 0, 0)
     }
 }
