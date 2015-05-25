@@ -10,6 +10,7 @@ import UIKit
 import SDWebImage
 import SVProgressHUD
 
+let dismissScale : CGFloat = 1.0
 class SinglePhotoBrowserViewController: UIViewController {
     //MARK: - 属性
     /// 滚动视图
@@ -141,17 +142,17 @@ extension SinglePhotoBrowserViewController : UIScrollViewDelegate {
         let scale = imageView.transform.a
         // 根据偏移量保持图片中心对齐
         scrollView.contentOffset = calculateContentOffset()
-        NSNotificationCenter.defaultCenter().postNotificationName(PhotoBrowserDidScaleNotification, object: nil, userInfo: ["scale" : scale])
+        NSNotificationCenter.defaultCenter().postNotificationName(PhotoBrowserDidScaleNotification, object: nil, userInfo: ["scale" : scale, "index" : index!])
     }
     func scrollViewWillEndDragging(scrollView: UIScrollView, withVelocity velocity: CGPoint, targetContentOffset: UnsafeMutablePointer<CGPoint>) {
-        if imageView.transform.a < 1.0 {
+        if imageView.transform.a < dismissScale {
             imageView.hidden = true
             scrollView.contentOffset = calculateContentOffset()
         }
     }
     func scrollViewDidEndZooming(scrollView: UIScrollView, withView view: UIView!, atScale scale: CGFloat) {
-        if scale < 1.0 {
-            NSNotificationCenter.defaultCenter().postNotificationName(PhotoBrowserStartInteractiveDismissNotification, object: NSNumber(integer: index!), userInfo: ["scale" : scale])
+        if scale < dismissScale {
+            NSNotificationCenter.defaultCenter().postNotificationName(PhotoBrowserStartInteractiveDismissNotification, object: nil, userInfo: ["scale" : scale, "index" : index!])
             dismissViewControllerAnimated(false, completion: nil)
         }else{
             // 重新调整图像的间距

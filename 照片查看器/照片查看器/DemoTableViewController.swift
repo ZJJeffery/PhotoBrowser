@@ -62,7 +62,6 @@ class DemoTableViewController: UITableViewController {
             let cell = tableView.dequeueReusableCellWithIdentifier(reusedId) as! DemoCell
             let rowHeight = cell.rowHeight(photoes)
             heightCache.setObject(rowHeight, forKey: indexPath.row)
-            println("\(indexPath.row) height: \(rowHeight)")
             return rowHeight
         }
         return heightCache.objectForKey(indexPath.row) as! CGFloat

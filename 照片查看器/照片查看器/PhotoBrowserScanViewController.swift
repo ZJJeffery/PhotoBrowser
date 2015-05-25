@@ -15,7 +15,6 @@ let PhotoBrowserEndDismissNotification = "PhotoBrowserEndDismissNotification"
 // 交互式dismiss通知
 let PhotoBrowserStartInteractiveDismissNotification = "PhotoBrowserStartInteractiveDismissNotification"
 
-
 private let reusedId = "photoCell"
 class PhotoBrowserScanViewController: UIViewController {
     //MARK: 属性
@@ -55,7 +54,7 @@ class PhotoBrowserScanViewController: UIViewController {
     /// 一行图片数目 默认是3
     var imageNumberInRow : Int = 3
     // 动画时长
-    var AnimationDuration : NSTimeInterval = 0.3
+    var AnimationDuration : NSTimeInterval = 3
     
     /// 高度约束
     var collectionViewHeight : NSLayoutConstraint?
@@ -91,6 +90,8 @@ class PhotoBrowserScanViewController: UIViewController {
         NSNotificationCenter.defaultCenter().addObserver(self, selector:"normalDismiss:", name: PhotoBrowserStartDismissNotification, object: nil)
         // 注册结束转场动画通知
         NSNotificationCenter.defaultCenter().addObserver(self, selector:"interactiveDismissAnimation:", name: PhotoBrowserStartInteractiveDismissNotification, object: nil)
+        // // 注册通知
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: "didScale:", name: PhotoBrowserDidScaleNotification, object: nil)
     }
     // 添加约束
     private func addconstraints() {
@@ -209,7 +210,15 @@ class PhotoBrowserScanViewController: UIViewController {
         let scaleW = height * imageW / imageH
         return CGSizeMake(scaleW, height)
     }
-    
+    //MARK: - 通知方法
+    func didScale(n : NSNotification){
+        let scale = n.userInfo!["scale"] as! CGFloat
+        let index = n.userInfo!["index"] as! Int
+        
+        let indexPath = NSIndexPath(forItem: index, inSection: 0)
+        let cell = self.collectionView!.cellForItemAtIndexPath(indexPath)! as UICollectionViewCell
+        cell.hidden = scale < dismissScale
+    }
     // 常规dismiss
     func normalDismiss(n : NSNotification) {
         // 根据通知得知正在看第几个图
@@ -218,25 +227,33 @@ class PhotoBrowserScanViewController: UIViewController {
         let endFrame = endFrameList![index]
         let startFrame = startFrameList![index]
         // 动画
-        dismissAnimation(startFrame, endFrame: endFrame, url: self.smallURLList![index], scale: 1)
+        dismissAnimation(startFrame, endFrame: endFrame, index: index, scale: 1)
     }
     // 交互式dismiss
     func interactiveDismissAnimation(n : NSNotification) {
         // 当前缩放比例
         let scale = n.userInfo!["scale"] as! CGFloat
         // 当前图片索引
-        let index = (n.object as! NSNumber).integerValue
+        let index = n.userInfo!["index"] as! Int
         // 坐标
         let endFrame = endFrameList![index]
         let startFrame = startFrameList![index]
         // 动画
-        dismissAnimation(startFrame, endFrame: endFrame, url: self.smallURLList![index], scale: scale)
+        dismissAnimation(startFrame, endFrame: endFrame, index: index, scale: scale)
     }
+    
+    //MARK: - 动画方法
     // dismiss动画方法
-    private func dismissAnimation(startFrame: CGRect, endFrame: CGRect, url : NSURL, scale : CGFloat){
+    private func dismissAnimation(startFrame: CGRect, endFrame: CGRect, index : Int, scale : CGFloat){
+        // 获取当前cell
+        let indexPath = NSIndexPath(forItem: index, inSection: 0)
+        let cell = self.collectionView?.cellForItemAtIndexPath(indexPath)
+        cell?.hidden = true
+        
         // 创建图片展示正在回去的图片
         let imageView = UIImageView(frame: endFrame)
         imageView.clipsToBounds = true
+        let url = self.smallURLList![index]
         imageView.sd_setImageWithURL(url)
         // 确定高度
         var height = endFrame.height * scale
@@ -275,8 +292,10 @@ class PhotoBrowserScanViewController: UIViewController {
                 NSNotificationCenter.defaultCenter().postNotificationName(PhotoBrowserEndDismissNotification, object: nil)
                 // 结束监听通知
                 self.removeNotification()
+                cell?.hidden = false
         })
     }
+    // 展示的动画
     private func presentAnimation(indexPath : NSIndexPath) {
         // 准备跳转的视图
         let modalVC = PhotoBrowserViewController()
@@ -289,6 +308,8 @@ class PhotoBrowserScanViewController: UIViewController {
         
         // 根据点击cell截取动画图片
         let cell = self.collectionView!.cellForItemAtIndexPath(indexPath) as! PhotoCell
+        // 隐藏
+        cell.hidden = true
         var dummyView = cell.snapshotViewAfterScreenUpdates(false)
         // 设置遮罩view
         let backView = UIView(frame: UIScreen.mainScreen().bounds)
@@ -322,7 +343,7 @@ class PhotoBrowserScanViewController: UIViewController {
                     SVProgressHUD.show()
             }
                 self.view.userInteractionEnabled = true
-            
+                cell.hidden = false
             })
         }
 

@@ -58,10 +58,10 @@ class DemoCell: UITableViewCell {
     
     func rowHeight(photoes : [Picture]) -> CGFloat {
         self.photoes = photoes
-        
         self.layoutIfNeeded()
         return CGRectGetMaxY(self.photoView!.frame) + CGFloat(20.0)
     }
+    
     // 添加约束
     private func addConstraint(){
         var cons = [AnyObject]()
