@@ -19,8 +19,6 @@ let PhotoBrowserStartInteractiveDismissNotification = "PhotoBrowserStartInteract
 private let reusedId = "photoCell"
 class PhotoBrowserScanViewController: UIViewController {
     //MARK: 属性
-    // 动画时长
-    let AnimationDuration = 0.3 as NSTimeInterval
     /// 布局约束
     var layout : UICollectionViewFlowLayout = UICollectionViewFlowLayout()
     /// 图片视图
@@ -37,6 +35,8 @@ class PhotoBrowserScanViewController: UIViewController {
     /// 小图数组
     var smallURLList : [NSURL]? {
         didSet {
+            // 计算自动布局
+            calculateViewSize()
             collectionView?.reloadData()
         }
     }
@@ -54,17 +54,17 @@ class PhotoBrowserScanViewController: UIViewController {
     var imageMargin : CGFloat = 10.0
     /// 一行图片数目 默认是3
     var imageNumberInRow : Int = 3
-    
+    // 动画时长
+    var AnimationDuration : NSTimeInterval = 0.3
     
     /// 高度约束
-    var viewHeight : NSLayoutConstraint?
+    var collectionViewHeight : NSLayoutConstraint?
     /// 宽度约束
-    var viewWidth : NSLayoutConstraint?
+    var collectionViewWidth : NSLayoutConstraint?
     
     //MARK: - 自己方法
     override func loadView() {
-        view = UIView()
-        view.addSubview(self.collectionView!)
+        view = self.collectionView!
         // 添加约束
         addconstraints()
     }
@@ -99,19 +99,13 @@ class PhotoBrowserScanViewController: UIViewController {
         view.setTranslatesAutoresizingMaskIntoConstraints(false)
         // 创建约束
         var cons = [AnyObject]()
-        // 字典属性
-        let dic = ["collectionView" : collectionView!] as [String : AnyObject]
-        // 横向约束
-        cons += NSLayoutConstraint.constraintsWithVisualFormat("H:|-0-[collectionView]-0-|", options: NSLayoutFormatOptions.allZeros, metrics: nil, views: dic)
-        // 纵向约束
-        cons += NSLayoutConstraint.constraintsWithVisualFormat("V:|-0-[collectionView]-0-|", options: NSLayoutFormatOptions.allZeros, metrics: nil, views: dic)
         // 添加约束
         // 宽高约束
-        viewHeight = NSLayoutConstraint(item: view, attribute: NSLayoutAttribute.Height, relatedBy: NSLayoutRelation.Equal, toItem: nil, attribute: NSLayoutAttribute.NotAnAttribute, multiplier: 1, constant: 0)
-        viewWidth = NSLayoutConstraint(item: self.view, attribute: NSLayoutAttribute.Width, relatedBy: NSLayoutRelation.Equal, toItem: nil, attribute:  NSLayoutAttribute.NotAnAttribute, multiplier: 1, constant: 0)
+        collectionViewHeight = NSLayoutConstraint(item: collectionView!, attribute: NSLayoutAttribute.Height, relatedBy: NSLayoutRelation.Equal, toItem: nil, attribute: NSLayoutAttribute.NotAnAttribute, multiplier: 1, constant: 0)
+        collectionViewWidth = NSLayoutConstraint(item: self.collectionView!, attribute: NSLayoutAttribute.Width, relatedBy: NSLayoutRelation.Equal, toItem: nil, attribute:  NSLayoutAttribute.NotAnAttribute, multiplier: 1, constant: 0)
         // 宽高约束添加
-        cons.append(viewHeight!)
-        cons.append(viewWidth!)
+        cons.append(collectionViewHeight!)
+        cons.append(collectionViewWidth!)
         self.view.addConstraints(cons)
     }
     // 计算framelist
@@ -142,8 +136,8 @@ class PhotoBrowserScanViewController: UIViewController {
         let itemHeight = layout.itemSize.height
         // 无图
         if self.smallURLList == nil {
-            viewHeight?.constant = 0
-            viewWidth?.constant = 0
+            collectionViewHeight?.constant = 0
+            collectionViewWidth?.constant = 0
             return
         }
         // 一张图
@@ -151,22 +145,22 @@ class PhotoBrowserScanViewController: UIViewController {
             // 判断是否给定大小
             if singleImageSize == nil {
                 let size = CGSizeMake(itemWidth * 2, itemHeight * 2)
-                viewHeight?.constant = size.height
-                viewWidth?.constant = size.width
+                collectionViewHeight?.constant = size.height
+                collectionViewWidth?.constant = size.width
                 layout.itemSize = size
                 // 清空singleImageSize属性 防止复用
                 singleImageSize = nil
                 return
             }
             // 有初始大小
-            viewHeight?.constant = singleImageSize!.height
-            viewWidth?.constant = singleImageSize!.width
+            collectionViewHeight?.constant = singleImageSize!.height
+            collectionViewWidth?.constant = singleImageSize!.width
             return
         }
         // 2张图片
         if self.smallURLList!.count == 2 {
-            viewHeight?.constant = itemHeight
-            viewWidth?.constant = itemWidth * 2 + imageMargin
+            collectionViewHeight?.constant = itemHeight
+            collectionViewWidth?.constant = itemWidth * 2 + imageMargin
             return
         }
         // 特殊张数图片
@@ -174,17 +168,17 @@ class PhotoBrowserScanViewController: UIViewController {
             let number = CGFloat(imageNumberInRow - 1)
             let width = itemWidth * number + imageMargin
             let height = itemHeight * number + imageMargin
-            viewHeight?.constant = height
-            viewWidth?.constant = width
+            collectionViewHeight?.constant = height
+            collectionViewWidth?.constant = width
             return
         }
         //  其他图片数量
-        let count = self.smallURLList!.count
+        let count = self.smallURLList!.count - 1
         let row = CGFloat(count / imageNumberInRow + 1)
         let width = itemWidth * CGFloat(imageNumberInRow) +  imageMargin * CGFloat(imageNumberInRow - 1)
         let height = itemHeight * row + imageMargin * (row - 1)
-        viewHeight?.constant = height
-        viewWidth?.constant = width
+        collectionViewHeight?.constant = height
+        collectionViewWidth?.constant = width
     }
     // 坐标转换
     private func cellStartFrameRelativeToMainScreen(cell : PhotoCell) ->CGRect {
@@ -344,8 +338,6 @@ class PhotoBrowserScanViewController: UIViewController {
 extension PhotoBrowserScanViewController : UICollectionViewDataSource {
 
     func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        // 计算自动布局
-        calculateViewSize()
         return self.smallURLList?.count ?? 0
     }
     

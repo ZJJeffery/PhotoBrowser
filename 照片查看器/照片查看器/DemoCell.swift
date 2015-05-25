@@ -10,6 +10,8 @@ import UIKit
 
 class DemoCell: UITableViewCell {
 
+
+    @IBOutlet weak var titleLabel: UILabel!
     
     var photoVC : PhotoBrowserScanViewController?
     
@@ -49,12 +51,23 @@ class DemoCell: UITableViewCell {
         let photoVC = PhotoBrowserScanViewController()
         self.photoVC = photoVC
         photoView = photoVC.view
-        self.addSubview(photoView!)
+        self.contentView.addSubview(photoView!)
+        // 添加约束
+        addConstraint()
     }
-
-//    override func layoutSubviews() {
-//        super.layoutSubviews()
-//        photoView?.frame = self.bounds
-//    }
+    
+    func rowHeight(photoes : [Picture]) -> CGFloat {
+        self.photoes = photoes
+        
+        self.layoutIfNeeded()
+        return CGRectGetMaxY(self.photoView!.frame) + CGFloat(20.0)
+    }
+    // 添加约束
+    private func addConstraint(){
+        var cons = [AnyObject]()
+        cons.append(NSLayoutConstraint(item: self.photoView!, attribute: NSLayoutAttribute.Top, relatedBy: NSLayoutRelation.Equal, toItem: self.titleLabel, attribute: NSLayoutAttribute.Bottom, multiplier: 1, constant: 10))
+        cons.append(NSLayoutConstraint(item: self.photoView!, attribute: NSLayoutAttribute.Leading, relatedBy: NSLayoutRelation.Equal, toItem: self.titleLabel, attribute: NSLayoutAttribute.Leading, multiplier: 1, constant: 0))
+        self.contentView.addConstraints(cons)
+    }
 
 }
