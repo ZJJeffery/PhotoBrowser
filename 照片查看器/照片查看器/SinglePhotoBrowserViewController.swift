@@ -152,7 +152,7 @@ extension SinglePhotoBrowserViewController : UIScrollViewDelegate {
     func scrollViewDidEndZooming(scrollView: UIScrollView, withView view: UIView!, atScale scale: CGFloat) {
         if scale < 1.0 {
             NSNotificationCenter.defaultCenter().postNotificationName(PhotoBrowserStartInteractiveDismissNotification, object: NSNumber(integer: index!), userInfo: ["scale" : scale])
-            dismissViewControllerAnimated(true, completion: nil)
+            dismissViewControllerAnimated(false, completion: nil)
         }else{
             // 重新调整图像的间距
             // 计算顶部的间距值

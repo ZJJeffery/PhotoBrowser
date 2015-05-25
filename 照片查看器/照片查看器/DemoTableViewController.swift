@@ -14,8 +14,8 @@ class DemoTableViewController: UITableViewController {
         let pList = Picture.picturesList()
         return pList
     }()
-
-    lazy var dataList : [[Picture]]? = {
+    
+    lazy var dataList : [[Picture]] = {
         var result = [[Picture]]()
         for i in 1..<10 {
             var list = [Picture]()
@@ -38,7 +38,7 @@ class DemoTableViewController: UITableViewController {
     }
 
     override func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return self.dataList?.count ?? 0
+        return self.dataList.count
     }
 
     
@@ -47,7 +47,7 @@ class DemoTableViewController: UITableViewController {
         if !(childViewControllers as NSArray).containsObject(cell.photoVC!) {
             addChildViewController(cell.photoVC!)
         }
-        cell.photoes = self.dataList![indexPath.row] as [Picture]
+        cell.photoes = self.dataList[indexPath.row] as [Picture]
         return cell
     }
 }

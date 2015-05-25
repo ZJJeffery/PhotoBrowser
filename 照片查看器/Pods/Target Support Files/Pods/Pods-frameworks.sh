@@ -50,10 +50,8 @@ code_sign() {
 if [[ "$CONFIGURATION" == "Debug" ]]; then
   install_framework 'SDWebImage.framework'
   install_framework 'SVProgressHUD.framework'
-  install_framework 'ZJModalKing.framework'
 fi
 if [[ "$CONFIGURATION" == "Release" ]]; then
   install_framework 'SDWebImage.framework'
   install_framework 'SVProgressHUD.framework'
-  install_framework 'ZJModalKing.framework'
 fi

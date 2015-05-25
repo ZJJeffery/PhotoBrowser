@@ -1,6 +1,0 @@
-framework module ZJModalKing {
-  umbrella header "Pods-ZJModalKing-umbrella.h"
-
-  export *
-  module * { export * }
-}

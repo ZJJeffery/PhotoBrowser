@@ -5,19 +5,7 @@
 //  Created by Jiajun Zheng on 15/5/24.
 //  Copyright (c) 2015年 hgProject. All rights reserved.
 //
-
-//MARK: - 属性
-
-//MARK: - 内部方法
-
-
-//MARK: - 数据源方法
-
-
-//MARK: - 代理方法
-
 import UIKit
-import ZJModalKing
 import SDWebImage
 import SVProgressHUD
 // 通知列表
@@ -58,16 +46,21 @@ class PhotoBrowserScanViewController: UIViewController {
     var startFrameList : [CGRect]?
     /// 展开后frame
     var endFrameList : [CGRect]?
+    
+    /// 可自定义属性
     /// 单张图片大小 如果没有给定该参数，单张图片显示的时候就按照layout的大小的2倍显示
     var singleImageSize : CGSize?
     /// 图片间距 默认为 10
     var imageMargin : CGFloat = 10.0
     /// 一行图片数目 默认是3
     var imageNumberInRow : Int = 3
+    
+    
     /// 高度约束
     var viewHeight : NSLayoutConstraint?
     /// 宽度约束
     var viewWidth : NSLayoutConstraint?
+    
     //MARK: - 自己方法
     override func loadView() {
         view = UIView()
@@ -161,6 +154,8 @@ class PhotoBrowserScanViewController: UIViewController {
                 viewHeight?.constant = size.height
                 viewWidth?.constant = size.width
                 layout.itemSize = size
+                // 清空singleImageSize属性 防止复用
+                singleImageSize = nil
                 return
             }
             // 有初始大小
@@ -221,7 +216,7 @@ class PhotoBrowserScanViewController: UIViewController {
         return CGSizeMake(scaleW, height)
     }
     
-    // 常规dismiss动画
+    // 常规dismiss
     func normalDismiss(n : NSNotification) {
         // 根据通知得知正在看第几个图
         let index = n.userInfo!["index"] as! Int
@@ -231,8 +226,7 @@ class PhotoBrowserScanViewController: UIViewController {
         // 动画
         dismissAnimation(startFrame, endFrame: endFrame, url: self.smallURLList![index], scale: 1)
     }
-    // 交互式dismiss动画
-
+    // 交互式dismiss
     func interactiveDismissAnimation(n : NSNotification) {
         // 当前缩放比例
         let scale = n.userInfo!["scale"] as! CGFloat
@@ -244,6 +238,7 @@ class PhotoBrowserScanViewController: UIViewController {
         // 动画
         dismissAnimation(startFrame, endFrame: endFrame, url: self.smallURLList![index], scale: scale)
     }
+    // dismiss动画方法
     private func dismissAnimation(startFrame: CGRect, endFrame: CGRect, url : NSURL, scale : CGFloat){
         // 创建图片展示正在回去的图片
         let imageView = UIImageView(frame: endFrame)
@@ -256,8 +251,6 @@ class PhotoBrowserScanViewController: UIViewController {
         imageView.center = CGPointMake(UIScreen.mainScreen().bounds.width * CGFloat(0.5), UIScreen.mainScreen().bounds.height * CGFloat(0.5))
         // 如果是长图，限制大小
         if endFrame.height > UIScreen.mainScreen().bounds.height {
-            // Top属性
-//            imageView.contentMode = UIViewContentMode.Top
             // 大小设定
             let width = endFrame.width * scale
             let x = (UIScreen.mainScreen().bounds.width - width) * 0.5
@@ -272,6 +265,7 @@ class PhotoBrowserScanViewController: UIViewController {
         let backView = UIView(frame: UIScreen.mainScreen().bounds)
         backView.backgroundColor = UIColor.blackColor()
         backView.alpha = scale
+        // 添加遮罩和图片
         UIApplication.sharedApplication().keyWindow?.addSubview(backView)
         UIApplication.sharedApplication().keyWindow?.addSubview(imageView)
         // 开始动画
@@ -288,6 +282,55 @@ class PhotoBrowserScanViewController: UIViewController {
                 // 结束监听通知
                 self.removeNotification()
         })
+    }
+    private func presentAnimation(indexPath : NSIndexPath) {
+        // 准备跳转的视图
+        let modalVC = PhotoBrowserViewController()
+        // 将图像数组传递
+        modalVC.largeImageURLList = largeURLList
+        modalVC.smallImageURLList = smallURLList
+        modalVC.index = indexPath.item
+        modalVC.startFrameList = startFrameList
+        modalVC.endFrameList = endFrameList
+        
+        // 根据点击cell截取动画图片
+        let cell = self.collectionView!.cellForItemAtIndexPath(indexPath) as! PhotoCell
+        var dummyView = cell.snapshotViewAfterScreenUpdates(false)
+        // 设置遮罩view
+        let backView = UIView(frame: UIScreen.mainScreen().bounds)
+        backView.backgroundColor = UIColor.blackColor()
+        backView.alpha = 0
+        
+        
+        // 开始frame
+        let startFrame = startFrameList![indexPath.item]
+        let imageView = UIImageView(frame: startFrame)
+        var endFrame = endFrameList![indexPath.item]
+        imageView.sd_setImageWithURL(smallURLList![indexPath.item])
+        imageView.contentMode = UIViewContentMode.ScaleAspectFill
+        imageView.clipsToBounds = true
+        // 将遮罩添加到window
+        UIApplication.sharedApplication().keyWindow?.addSubview(backView)
+        UIApplication.sharedApplication().keyWindow?.addSubview(imageView)
+        // 准备跳转
+        modalVC.view.alpha = 0
+        // 设置跳转属性为自定义
+        modalVC.modalPresentationStyle = UIModalPresentationStyle.Custom
+        presentViewController(modalVC, animated: false){ () -> Void in
+            UIView.animateWithDuration(self.AnimationDuration, animations: { () -> Void in
+                imageView.frame = endFrame
+                backView.alpha = 1
+            }, completion: { (_) -> Void in
+                modalVC.view.alpha = 1
+                imageView.removeFromSuperview()
+                backView.removeFromSuperview()
+            if !(SDWebImageManager.sharedManager().cachedImageExistsForURL(modalVC.largeImageURLList![indexPath.item])) {
+                    SVProgressHUD.show()
+            }
+                self.view.userInteractionEnabled = true
+            
+            })
+        }
 
     }
     // 根据给定的frame, 计算center坐标
@@ -320,55 +363,8 @@ extension PhotoBrowserScanViewController : UICollectionViewDelegate {
         regiserNotification()
         // 计算当前点击时候的全部cell的frame
         calculateFrameLists()
-        // 准备跳转的视图
-        let modalVC = PhotoBrowserViewController()
-        // 将图像数组传递
-        modalVC.largeImageURLList = largeURLList
-        modalVC.smallImageURLList = smallURLList
-        modalVC.index = indexPath.item
-        modalVC.startFrameList = startFrameList
-        modalVC.endFrameList = endFrameList
-        
-        // 根据点击cell截取动画图片
-        let cell = collectionView.cellForItemAtIndexPath(indexPath) as! PhotoCell
-        var dummyView = cell.snapshotViewAfterScreenUpdates(false)
-        // 设置遮罩view
-        let backView = UIView(frame: UIScreen.mainScreen().bounds)
-        backView.backgroundColor = UIColor.blackColor()
-        backView.alpha = 0
-
-        
-        // 开始frame
-        let startFrame = startFrameList![indexPath.item]
-        let imageView = UIImageView(frame: startFrame)
-        var endFrame = endFrameList![indexPath.item]
-        imageView.sd_setImageWithURL(smallURLList![indexPath.item])
-        imageView.contentMode = UIViewContentMode.ScaleAspectFill
-        imageView.clipsToBounds = true
-        // 将遮罩添加到window
-        UIApplication.sharedApplication().keyWindow?.addSubview(backView)
-        UIApplication.sharedApplication().keyWindow?.addSubview(imageView)
-        // 准备跳转
-        modalVC.view.alpha = 0
-        self.mk_presentViewController(modalVC, withPresentFrame: UIScreen.mainScreen().bounds, withPresentAnimation: { (_) -> NSTimeInterval in
-            return 0.0
-        }, withDismissAnimation: { (_) -> NSTimeInterval in
-            return 0.0
-        }) { () -> Void in
-            UIView.animateWithDuration(self.AnimationDuration, animations: { () -> Void in
-                imageView.frame = endFrame
-                backView.alpha = 1
-            }, completion: { (_) -> Void in
-                modalVC.view.alpha = 1
-                imageView.removeFromSuperview()
-                backView.removeFromSuperview()
-                if !(SDWebImageManager.sharedManager().cachedImageExistsForURL(modalVC.largeImageURLList![indexPath.item])) {
-                    SVProgressHUD.show()
-                }
-                self.view.userInteractionEnabled = true
-
-            })
-        }
+        // 进行动画跳转
+        presentAnimation(indexPath)
     }
 }
 
