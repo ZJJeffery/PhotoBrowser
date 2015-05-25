@@ -8,6 +8,7 @@
 import UIKit
 import SDWebImage
 import SVProgressHUD
+
 //MARK: - 常量列表
 /// 通知列表
 // 普通dismiss通知
@@ -25,7 +26,14 @@ private let reusedId = "PhotoCell"
 /// 触发dismiss的Scale大小
 private let dismissScale : CGFloat = 1.0
 
-
+/** 展示小图的控制器
+    该视图通过封装collectionView来实现小图的展示，同时实现了很多动画方法用于变相实现了转场动画，
+    内部主要通过自定义转场动画使得该视图保持不消失，然后根据接听不同事件的通知，做出对应的动画实现
+    从而实现各种转场动画
+    
+    由于该控制器不止一个存在，所以只有被点击的控制器开启通知的监听，并且当回到该界面的时候取消监听通知
+    以此保持只有对应需要产生动作的控制器做出对应的响应
+*/
 //MARK: - 展示小图的控制器
 class PhotoBrowserScanViewController: UIViewController {
     //MARK: 属性
@@ -65,7 +73,7 @@ class PhotoBrowserScanViewController: UIViewController {
     /// 一行图片数目 默认是3
     var imageNumberInRow : Int = 3
     // 动画时长
-    var AnimationDuration : NSTimeInterval = 3
+    var AnimationDuration : NSTimeInterval = 0.3
     
     //MARK: - 布局约束
     /// 高度约束
@@ -394,8 +402,10 @@ extension PhotoBrowserScanViewController : UICollectionViewDelegate {
     }
 }
 
-
-//MARK: - 单图展示Cell
+/** 单小图图展示Cell
+    简单地小图展示Cell，主要展示小图，并且传递接受大图，小图的URL传递给需要展示的下面的控制器
+*/
+//MARK: - 单小图图展示Cell
 class PhotoBrowserCell: UICollectionViewCell {
     //MARK: - 属性
     /// 查看照片控制器
@@ -432,6 +442,7 @@ class PhotoBrowserCell: UICollectionViewCell {
         super.init(coder: aDecoder)
     }
 }
+
 //MARK: - 处理单张图片的控制器
 class SinglePhotoBrowserViewController: UIViewController {
     //MARK: - 属性

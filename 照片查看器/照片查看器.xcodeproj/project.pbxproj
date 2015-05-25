@@ -15,7 +15,7 @@
 		9608BF301B0D74FE00582077 /* _____Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9608BF2F1B0D74FE00582077 /* _____Tests.swift */; };
 		9608BF3C1B0D77BB00582077 /* pictures.plist in Resources */ = {isa = PBXBuildFile; fileRef = 9608BF3B1B0D77BB00582077 /* pictures.plist */; };
 		9608BF3E1B0D780000582077 /* Picture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9608BF3D1B0D780000582077 /* Picture.swift */; };
-		968BA0431B11620A00BEB4E1 /* PhotoBrowserScanViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 968BA0421B11620A00BEB4E1 /* PhotoBrowserScanViewController.swift */; };
+		968BA0431B11620A00BEB4E1 /* PhotoBrowser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 968BA0421B11620A00BEB4E1 /* PhotoBrowser.swift */; };
 		968BA0471B11688A00BEB4E1 /* DemoTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 968BA0461B11688A00BEB4E1 /* DemoTableViewController.swift */; };
 		968BA0491B11694F00BEB4E1 /* DemoCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 968BA0481B11694F00BEB4E1 /* DemoCell.swift */; };
 /* End PBXBuildFile section */
@@ -42,7 +42,7 @@
 		9608BF2F1B0D74FE00582077 /* _____Tests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "_____Tests.swift"; sourceTree = "<group>"; };
 		9608BF3B1B0D77BB00582077 /* pictures.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = pictures.plist; sourceTree = "<group>"; };
 		9608BF3D1B0D780000582077 /* Picture.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Picture.swift; sourceTree = "<group>"; };
-		968BA0421B11620A00BEB4E1 /* PhotoBrowserScanViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PhotoBrowserScanViewController.swift; sourceTree = "<group>"; };
+		968BA0421B11620A00BEB4E1 /* PhotoBrowser.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PhotoBrowser.swift; sourceTree = "<group>"; };
 		968BA0461B11688A00BEB4E1 /* DemoTableViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DemoTableViewController.swift; sourceTree = "<group>"; };
 		968BA0481B11694F00BEB4E1 /* DemoCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DemoCell.swift; sourceTree = "<group>"; };
 		A6669C1AF35BD91CFB3C9F00 /* Pods.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Pods.release.xcconfig; path = "Pods/Target Support Files/Pods/Pods.release.xcconfig"; sourceTree = "<group>"; };
@@ -109,7 +109,7 @@
 				9608BF201B0D74FE00582077 /* Images.xcassets */,
 				9608BF221B0D74FE00582077 /* LaunchScreen.xib */,
 				9608BF171B0D74FE00582077 /* Supporting Files */,
-				968BA0421B11620A00BEB4E1 /* PhotoBrowserScanViewController.swift */,
+				968BA0421B11620A00BEB4E1 /* PhotoBrowser.swift */,
 			);
 			path = "照片查看器";
 			sourceTree = "<group>";
@@ -300,7 +300,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				968BA0431B11620A00BEB4E1 /* PhotoBrowserScanViewController.swift in Sources */,
+				968BA0431B11620A00BEB4E1 /* PhotoBrowser.swift in Sources */,
 				968BA0491B11694F00BEB4E1 /* DemoCell.swift in Sources */,
 				9608BF3E1B0D780000582077 /* Picture.swift in Sources */,
 				9608BF1A1B0D74FE00582077 /* AppDelegate.swift in Sources */,
