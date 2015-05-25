@@ -274,6 +274,7 @@ class PhotoBrowserScanViewController: UIViewController {
         // 创建图片展示正在回去的图片
         let imageView = UIImageView(frame: endFrame)
         imageView.clipsToBounds = true
+        imageView.contentMode = UIViewContentMode.ScaleAspectFill
         let url = self.smallURLList![index]
         imageView.sd_setImageWithURL(url)
         // 确定高度
@@ -291,7 +292,6 @@ class PhotoBrowserScanViewController: UIViewController {
             height = endFrame.height - y
             imageView.frame = CGRectMake(x, y, width, height)
         }
-        imageView.contentMode = UIViewContentMode.ScaleAspectFill
         
         // 遮罩
         let backView = UIView(frame: UIScreen.mainScreen().bounds)
