@@ -7,7 +7,7 @@
 //
 import UIKit
 import SDWebImage
-import SVProgressHUD
+
 
 //MARK: - 常量列表
 /// 通知列表
@@ -25,7 +25,8 @@ private let reusedId = "PhotoCell"
 
 /// 触发dismiss的Scale大小
 private let dismissScale : CGFloat = 1.0
-
+/// 图片占位图
+private var placeHolderName : String = "placeHolder"
 /** 展示小图的控制器
     该视图通过封装collectionView来实现小图的展示，同时实现了很多动画方法用于变相实现了转场动画，
     内部主要通过自定义转场动画使得该视图保持不消失，然后根据接听不同事件的通知，做出对应的动画实现
@@ -47,6 +48,12 @@ class PhotoBrowserScanViewController: UIViewController {
     var AnimationDuration : NSTimeInterval = 0.3
     /// itemSize
     var itemSize : CGSize = CGSizeMake(90, 90)
+    /// 图片占位图
+    var placeHolder : String? {
+        didSet {
+            placeHolderName = placeHolder!
+        }
+    }
     //MARK: 其他属性
     /// 布局约束
     var layout : UICollectionViewFlowLayout = UICollectionViewFlowLayout()
@@ -281,7 +288,7 @@ class PhotoBrowserScanViewController: UIViewController {
         imageView.contentMode = UIViewContentMode.ScaleAspectFill
         let photo = self.photoes![index]
         let url = photo.smallURL
-        imageView.sd_setImageWithURL(url)
+        imageView.sd_setImageWithURL(url, placeholderImage: UIImage(named: placeHolderName))
         // 确定高度
         var height = endFrame.height * scale
         // 统一计算位置
@@ -301,7 +308,7 @@ class PhotoBrowserScanViewController: UIViewController {
         // 遮罩
         let backView = UIView(frame: UIScreen.mainScreen().bounds)
         backView.backgroundColor = UIColor.blackColor()
-        backView.alpha = scale
+        backView.alpha = scale < dismissScale ? 0 : 1
         // 添加遮罩和图片
         UIApplication.sharedApplication().keyWindow?.addSubview(backView)
         UIApplication.sharedApplication().keyWindow?.addSubview(imageView)
@@ -348,7 +355,7 @@ class PhotoBrowserScanViewController: UIViewController {
         var endFrame = endFrameList![indexPath.item]
         let photo = self.photoes![indexPath.item]
         let url = photo.smallURL
-        imageView.sd_setImageWithURL(url)
+        imageView.sd_setImageWithURL(url, placeholderImage: UIImage(named: placeHolderName))
         imageView.contentMode = UIViewContentMode.ScaleAspectFill
         imageView.clipsToBounds = true
         // 将遮罩添加到window
@@ -358,6 +365,7 @@ class PhotoBrowserScanViewController: UIViewController {
         modalVC.view.alpha = 0
         // 设置跳转属性为自定义
         modalVC.modalPresentationStyle = UIModalPresentationStyle.Custom
+//        SVProgressHUD.dismiss()
         presentViewController(modalVC, animated: false){ () -> Void in
             UIView.animateWithDuration(self.AnimationDuration, animations: { () -> Void in
                 imageView.frame = endFrame
@@ -368,20 +376,11 @@ class PhotoBrowserScanViewController: UIViewController {
                 backView.removeFromSuperview()
                 let photo = self.photoes![indexPath.item]
                 let url = photo.largeURL
-            if !(SDWebImageManager.sharedManager().cachedImageExistsForURL(url)) {
-                    SVProgressHUD.show()
-            }
                 self.view.userInteractionEnabled = true
                 cell.hidden = false
             })
         }
 
-    }
-    // 根据给定的frame, 计算center坐标
-    private func calculateCenterPointWithRect(rect : CGRect) -> CGPoint {
-        let x = rect.origin.x + rect.width * 0.5
-        let y = rect.origin.y + rect.height * 0.5
-        return CGPointMake(x, y)
     }
 }
 //MARK: - UICollectionViewDataSource数据源方法
@@ -428,7 +427,7 @@ class PhotoCell: UICollectionViewCell {
     /// 图像地址
     var url : NSURL? {
         didSet {
-            imageView!.sd_setImageWithURL(url)
+            imageView!.sd_setImageWithURL(url, placeholderImage: UIImage(named: placeHolderName))
         }
     }
     // 功能方法
@@ -529,7 +528,7 @@ class PhotoBrowserViewController: UIViewController {
     //MARK: - 监听方法
     /// 关闭视图
     func close() {
-        SVProgressHUD.dismiss()
+//        SVProgressHUD.dismiss()
         // 确定关闭的图像索引
         let indexPath = collectionView.indexPathsForVisibleItems().last as! NSIndexPath
         let index = indexPath.item
@@ -564,7 +563,7 @@ class PhotoBrowserViewController: UIViewController {
     func didScale(noti : NSNotification){
         let scale = noti.userInfo!["scale"] as! CGFloat
         // 隐藏关闭按钮
-        closeBtn.hidden = scale < 1.0
+        closeBtn.hidden = scale < dismissScale
         collectionView.backgroundView?.alpha = scale
     }
 }
@@ -658,24 +657,28 @@ class SinglePhotoBrowserViewController: UIViewController {
     var largeURL : NSURL? {
         didSet {
             // 清除原有的图片
-            // 判断图片是否缓存
-            if !(SDWebImageManager.sharedManager().cachedImageExistsForURL(largeURL)) {
-                SDWebImageManager.sharedManager().downloadImageWithURL(smallURL, options: SDWebImageOptions(0), progress: nil, completed: { (image, error, _, _, _) -> Void in
-                    self.imageView.image = image
-                    self.setUpImage(image)
+            imageView.image = nil
+            // 能否拿拿得到小图
+            if let smallImage = SDWebImageManager.sharedManager().imageCache.imageFromDiskCacheForKey(smallURL?.absoluteString) {
+                SDWebImageManager.sharedManager().downloadImageWithURL(largeURL, options: SDWebImageOptions.allZeros, progress: nil, completed: { (image, error, _, _, _) -> Void in
+                    if image != nil {
+                        self.imageView.image = image
+                        self.setUpImage(image)
+                        return
+                    }
+                    //如果大图出错，打印错误显示不给力
+                    self.imageView.image = smallImage
+                    self.setUpImage(smallImage)
+                    println("largeURL: \(self.largeURL) loadError: \(error)")
+//                    SVProgressHUD.showErrorWithStatus("网络不给力")
                 })
+                return
             }
-            SDWebImageManager.sharedManager().downloadImageWithURL(largeURL, options: SDWebImageOptions(0), progress: nil) { (image, error, _, _, _) -> Void in
-                if error != nil {
-                    SVProgressHUD.showErrorWithStatus("网络不给力")
-                    SVProgressHUD.dismiss()
-                    return
-                }
-                // 设置图片
-                self.imageView.image = image
-                self.setUpImage(image)
-                SVProgressHUD.dismiss()
-            }
+            // 小图都拿不到
+//            SVProgressHUD.showErrorWithStatus("网络不给力")
+            let placeHolderImage = UIImage(named: placeHolderName)!
+            imageView.image = placeHolderImage
+            setUpImage(placeHolderImage)
         }
     }
     // 小图URL
@@ -689,19 +692,19 @@ class SinglePhotoBrowserViewController: UIViewController {
         view.addSubview(scrollView)
         scrollView.addSubview(imageView)
         // 设置SVProgressHUD
-        setSVProgressHUD()
+//        setSVProgressHUD()
     }
     override func viewDidDisappear(animated: Bool) {
         super.viewDidDisappear(animated)
-        SVProgressHUD.dismiss()
+//        SVProgressHUD.dismiss()
     }
     //MARK: - 功能方法
     // 设置SVProgressHUD样式
-    private func setSVProgressHUD(){
-        SVProgressHUD.setBackgroundColor(UIColor(red: 0, green: 0, blue: 0, alpha: 0.5))
-        SVProgressHUD.setForegroundColor(UIColor.whiteColor())
-        SVProgressHUD.setRingThickness(8.0)
-    }
+//    private func setSVProgressHUD(){
+//        SVProgressHUD.setBackgroundColor(UIColor(red: 0, green: 0, blue: 0, alpha: 0.5))
+//        SVProgressHUD.setForegroundColor(UIColor.whiteColor())
+//        SVProgressHUD.setRingThickness(8.0)
+//    }
     // 重置scrollView属性
     private func resetScrollView() {
         scrollView.contentSize = CGSizeZero

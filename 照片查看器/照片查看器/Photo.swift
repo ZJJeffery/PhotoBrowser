@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import SDWebImage
 //MARK: - 处理图片的模型
 class Photo: NSObject {
     //MARK: - 属性
