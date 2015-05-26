@@ -36,35 +36,6 @@ private let dismissScale : CGFloat = 1.0
 */
 //MARK: - 展示小图的控制器
 class PhotoBrowserScanViewController: UIViewController {
-    //MARK: 属性
-    /// 布局约束
-    var layout : UICollectionViewFlowLayout = UICollectionViewFlowLayout()
-    /// 图片视图
-    lazy var collectionView: UICollectionView? = {
-        let cv = UICollectionView(frame: UIScreen.mainScreen().bounds, collectionViewLayout: self.layout)
-        cv.backgroundColor = UIColor.clearColor()
-        cv.dataSource = self
-        cv.delegate = self
-        // 取消指示器
-        cv.showsHorizontalScrollIndicator = false
-        cv.showsVerticalScrollIndicator = false
-        return cv
-    }()
-    /// 小图数组
-    var smallURLList : [NSURL]? {
-        didSet {
-            // 计算自动布局
-            calculateViewSize()
-            collectionView?.reloadData()
-        }
-    }
-    /// 大图数组
-    var largeURLList : [NSURL]?
-    /// 小图开始frame
-    var startFrameList : [CGRect]?
-    /// 展开后frame
-    var endFrameList : [CGRect]?
-    
     //MARK: - 可自定义属性
     /// 单张图片大小 如果没有给定该参数，单张图片显示的时候就按照layout的大小的2倍显示
     var singleImageSize : CGSize?
@@ -74,6 +45,40 @@ class PhotoBrowserScanViewController: UIViewController {
     var imageNumberInRow : Int = 3
     // 动画时长
     var AnimationDuration : NSTimeInterval = 0.3
+    /// itemSize
+    var itemSize : CGSize = CGSizeMake(90, 90)
+    //MARK: 其他属性
+    /// 布局约束
+    var layout : UICollectionViewFlowLayout = UICollectionViewFlowLayout()
+    /// 图片视图
+    lazy var collectionView: UICollectionView? = {
+        let cv = UICollectionView(frame: CGRectZero, collectionViewLayout: self.layout)
+        cv.backgroundColor = UIColor.clearColor()
+        cv.dataSource = self
+        cv.delegate = self
+        // 取消指示器
+        cv.showsHorizontalScrollIndicator = false
+        cv.showsVerticalScrollIndicator = false
+        return cv
+    }()
+    /// URL元祖接收外界需要展示的数据
+    var URLList : (smallURLList : [NSURL], largeURLList : [NSURL])? {
+        didSet {
+            // 根据数据转换成模型数组
+            if URLList != nil{
+                photoes = Photo.photoes(URLList!.smallURLList, largeURLList: URLList!.largeURLList)
+            }
+            // 计算自动布局
+            calculateViewSize()
+            collectionView?.reloadData()
+        }
+    }
+    // 图片模型数组
+    var photoes : [Photo]?
+    /// 小图开始frame
+    var startFrameList : [CGRect]?
+    /// 展开后frame
+    var endFrameList : [CGRect]?
     
     //MARK: - 布局约束
     /// 高度约束
@@ -101,7 +106,7 @@ class PhotoBrowserScanViewController: UIViewController {
         NSNotificationCenter.defaultCenter().removeObserver(self)
     }
     private func setLayout(){
-        layout.itemSize = CGSizeMake(90, 90)
+        layout.itemSize = itemSize
         layout.minimumInteritemSpacing = 10
         layout.minimumLineSpacing = 10
     }
@@ -117,8 +122,7 @@ class PhotoBrowserScanViewController: UIViewController {
     // 添加约束
     private func addconstraints() {
         // 开启自动布局属性
-        self.collectionView?.setTranslatesAutoresizingMaskIntoConstraints(false)
-        view.setTranslatesAutoresizingMaskIntoConstraints(false)
+        collectionView?.setTranslatesAutoresizingMaskIntoConstraints(false)
         // 创建约束
         var cons = [AnyObject]()
         // 添加约束
@@ -128,13 +132,13 @@ class PhotoBrowserScanViewController: UIViewController {
         // 宽高约束添加
         cons.append(collectionViewHeight!)
         cons.append(collectionViewWidth!)
-        self.view.addConstraints(cons)
+        collectionView!.addConstraints(cons)
     }
     // 计算framelist
     private func calculateFrameLists() {
         var startFrameList = [CGRect]()
         var endFrameList = [CGRect]()
-        for i in 0..<(smallURLList?.count ?? 0) {
+        for i in 0..<(photoes?.count ?? 0) {
             let indexPath = NSIndexPath(forItem: i, inSection: 0)
             let cell = collectionView!.cellForItemAtIndexPath(indexPath) as! PhotoCell
             // 计算开始frame
@@ -156,14 +160,14 @@ class PhotoBrowserScanViewController: UIViewController {
         // 根据数组的数目
         let itemWidth = layout.itemSize.width
         let itemHeight = layout.itemSize.height
-        // 无图
-        if self.smallURLList == nil {
+        // 无图 根据外部情况可能传空，可能不传
+        if photoes == nil || photoes?.count == 0 {
             collectionViewHeight?.constant = 0
             collectionViewWidth?.constant = 0
             return
         }
         // 一张图
-        if self.smallURLList!.count == 1 {
+        if self.photoes!.count == 1 {
             // 判断是否给定大小
             if singleImageSize == nil {
                 let size = CGSizeMake(itemWidth * 2, itemHeight * 2)
@@ -180,13 +184,13 @@ class PhotoBrowserScanViewController: UIViewController {
             return
         }
         // 2张图片
-        if self.smallURLList!.count == 2 {
+        if self.photoes!.count == 2 {
             collectionViewHeight?.constant = itemHeight
             collectionViewWidth?.constant = itemWidth * 2 + imageMargin
             return
         }
         // 特殊张数图片
-        if self.smallURLList!.count == ((imageNumberInRow - 1) * 2) {
+        if self.photoes!.count == ((imageNumberInRow - 1) * 2) {
             let number = CGFloat(imageNumberInRow - 1)
             let width = itemWidth * number + imageMargin
             let height = itemHeight * number + imageMargin
@@ -195,7 +199,7 @@ class PhotoBrowserScanViewController: UIViewController {
             return
         }
         //  其他图片数量
-        let count = self.smallURLList!.count - 1
+        let count = self.photoes!.count - 1
         let row = CGFloat(count / imageNumberInRow + 1)
         let width = itemWidth * CGFloat(imageNumberInRow) +  imageMargin * CGFloat(imageNumberInRow - 1)
         let height = itemHeight * row + imageMargin * (row - 1)
@@ -275,7 +279,8 @@ class PhotoBrowserScanViewController: UIViewController {
         let imageView = UIImageView(frame: endFrame)
         imageView.clipsToBounds = true
         imageView.contentMode = UIViewContentMode.ScaleAspectFill
-        let url = self.smallURLList![index]
+        let photo = self.photoes![index]
+        let url = photo.smallURL
         imageView.sd_setImageWithURL(url)
         // 确定高度
         var height = endFrame.height * scale
@@ -321,8 +326,7 @@ class PhotoBrowserScanViewController: UIViewController {
         // 准备跳转的视图
         let modalVC = PhotoBrowserViewController()
         // 将图像数组传递
-        modalVC.largeImageURLList = largeURLList
-        modalVC.smallImageURLList = smallURLList
+        modalVC.photoes = self.photoes
         modalVC.index = indexPath.item
         modalVC.startFrameList = startFrameList
         modalVC.endFrameList = endFrameList
@@ -342,7 +346,9 @@ class PhotoBrowserScanViewController: UIViewController {
         let startFrame = startFrameList![indexPath.item]
         let imageView = UIImageView(frame: startFrame)
         var endFrame = endFrameList![indexPath.item]
-        imageView.sd_setImageWithURL(smallURLList![indexPath.item])
+        let photo = self.photoes![indexPath.item]
+        let url = photo.smallURL
+        imageView.sd_setImageWithURL(url)
         imageView.contentMode = UIViewContentMode.ScaleAspectFill
         imageView.clipsToBounds = true
         // 将遮罩添加到window
@@ -360,7 +366,9 @@ class PhotoBrowserScanViewController: UIViewController {
                 modalVC.view.alpha = 1
                 imageView.removeFromSuperview()
                 backView.removeFromSuperview()
-            if !(SDWebImageManager.sharedManager().cachedImageExistsForURL(modalVC.largeImageURLList![indexPath.item])) {
+                let photo = self.photoes![indexPath.item]
+                let url = photo.largeURL
+            if !(SDWebImageManager.sharedManager().cachedImageExistsForURL(url)) {
                     SVProgressHUD.show()
             }
                 self.view.userInteractionEnabled = true
@@ -380,13 +388,15 @@ class PhotoBrowserScanViewController: UIViewController {
 extension PhotoBrowserScanViewController : UICollectionViewDataSource {
 
     func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return self.smallURLList?.count ?? 0
+        return self.photoes?.count ?? 0
     }
     
     func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCellWithReuseIdentifier(reusedId, forIndexPath: indexPath) as! PhotoCell
         // 设置小图
-        cell.url = smallURLList![indexPath.item]
+        let photo = self.photoes![indexPath.item]
+        let url = photo.smallURL
+        cell.url = url
         return cell
     }
 }
@@ -450,6 +460,8 @@ class PhotoCell: UICollectionViewCell {
 //MARK: - 展示全部图片的控制器
 class PhotoBrowserViewController: UIViewController {
     //MARK: - 属性
+    /// 模型数组
+    var photoes : [Photo]?
     /// 布局属性
     lazy var layout : UICollectionViewFlowLayout = {
         let flowLayout = UICollectionViewFlowLayout()
@@ -477,10 +489,6 @@ class PhotoBrowserViewController: UIViewController {
     lazy var closeBtn : UIButton = {
         return self.createButton("关闭")
         }()
-    /// 大图URL数组
-    var largeImageURLList : [NSURL]?
-    /// 大图URL数组
-    var smallImageURLList : [NSURL]?
     /// 浏览的位置
     var index : Int?
     /// 所有frame对于主视图的位置
@@ -563,7 +571,7 @@ class PhotoBrowserViewController: UIViewController {
 //MARK: - PhotoBrowserViewController的数据源方法
 extension PhotoBrowserViewController: UICollectionViewDataSource {
     func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return largeImageURLList?.count ?? 0
+        return photoes?.count ?? 0
     }
     
     func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell {
@@ -573,8 +581,7 @@ extension PhotoBrowserViewController: UICollectionViewDataSource {
             addChildViewController(cell.viewerVC!)
         }
         // 设置图片URL
-        cell.smallURL = smallImageURLList![indexPath.item]
-        cell.largeURL = largeImageURLList![indexPath.item]
+        cell.photo = photoes![indexPath.item]
         // 传递当前索引
         cell.index = indexPath.item
         return cell
@@ -589,16 +596,10 @@ class PhotoBrowserCell: UICollectionViewCell {
     /// 查看照片控制器
     var viewerVC: SinglePhotoBrowserViewController?
     
-    /// 要显示的图片的 URL
-    var largeURL: NSURL? {
+    /// 图片模型数组
+    var photo : Photo? {
         didSet {
-            viewerVC?.largeURL = largeURL
-        }
-    }
-    /// 要显示的图片的小图 URL
-    var smallURL: NSURL? {
-        didSet {
-            viewerVC?.smallURL = smallURL
+            viewerVC?.photo = photo
         }
     }
     /// 要显示的图片的小图 URL
@@ -632,6 +633,13 @@ class PhotoBrowserCell: UICollectionViewCell {
 //MARK: - 处理单张图片的控制器
 class SinglePhotoBrowserViewController: UIViewController {
     //MARK: - 属性
+    /// 图片模型
+    var photo : Photo? {
+        didSet {
+            smallURL = photo?.smallURL
+            largeURL = photo?.largeURL
+        }
+    }
     /// 滚动视图
     lazy var scrollView : UIScrollView = {
         let sv = UIScrollView(frame: UIScreen.mainScreen().bounds)

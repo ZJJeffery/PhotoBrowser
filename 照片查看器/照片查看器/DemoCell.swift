@@ -29,20 +29,7 @@ class DemoCell: UITableViewCell {
                 sList.append(p.smallURL!)
             }
             // 将数组赋值
-            self.smallURLList = sList
-            self.largeURLList = lList
-        }
-    }
-    /// 小图数组
-    var smallURLList : [NSURL]? {
-        didSet {
-            self.photoVC!.smallURLList = smallURLList
-        }
-    }
-    /// 大图数组
-    var largeURLList : [NSURL]? {
-        didSet {
-            self.photoVC!.largeURLList = largeURLList
+            self.photoVC?.URLList = (sList,lList)
         }
     }
     // 测试数组
@@ -52,6 +39,7 @@ class DemoCell: UITableViewCell {
         self.photoVC = photoVC
         photoView = photoVC.view
         self.contentView.addSubview(photoView!)
+        setPropertys()
         // 添加约束
         addConstraint()
     }
@@ -68,6 +56,10 @@ class DemoCell: UITableViewCell {
         cons.append(NSLayoutConstraint(item: self.photoView!, attribute: NSLayoutAttribute.Top, relatedBy: NSLayoutRelation.Equal, toItem: self.titleLabel, attribute: NSLayoutAttribute.Bottom, multiplier: 1, constant: 10))
         cons.append(NSLayoutConstraint(item: self.photoView!, attribute: NSLayoutAttribute.Leading, relatedBy: NSLayoutRelation.Equal, toItem: self.titleLabel, attribute: NSLayoutAttribute.Leading, multiplier: 1, constant: 0))
         self.contentView.addConstraints(cons)
+    }
+    // 设置视图属性
+    private func setPropertys() {
+//        photoVC?.itemSize = CGSizeMake(180, 180)
     }
 
 }

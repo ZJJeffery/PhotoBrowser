@@ -24,7 +24,7 @@ class DemoTableViewController: UITableViewController {
     /// 测试数组
     lazy var dataList : [[Picture]] = {
         var result = [[Picture]]()
-        for i in 1..<10 {
+        for i in 0..<10 {
             var list = [Picture]()
             for x in 0..<i {
                 list.append(self.photoes[x])
