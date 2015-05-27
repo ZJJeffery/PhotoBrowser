@@ -8,7 +8,7 @@
 
 import UIKit
 
-class DemoCell: UITableViewCell, PhotoBrowserDelegate {
+class DemoCell: UITableViewCell, PhotoBrowserControllerDelegate {
 
 
     @IBOutlet weak var titleLabel: UILabel!
@@ -35,7 +35,8 @@ class DemoCell: UITableViewCell, PhotoBrowserDelegate {
     // 测试数组
     override func awakeFromNib() {
         super.awakeFromNib()
-        let photoVC = PhotoBrowserController(delegate: self)
+        let photoVC = PhotoBrowserController()
+        photoVC.delegate = self
         self.photoVC = photoVC
         photoView = photoVC.view
         self.contentView.addSubview(photoView!)

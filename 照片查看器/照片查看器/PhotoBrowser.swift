@@ -9,7 +9,21 @@ import UIKit
 import SDWebImage
 
 //MARK: - PhotoBrowser代理协议
-protocol PhotoBrowserDelegate: NSObjectProtocol {
+@objc protocol PhotoBrowserControllerDelegate: NSObjectProtocol {
+    /// 设置单张图片的大小，如果可以预先获得图片大小，建议调用该方法修改 默认是itemSize的2倍长宽
+    optional func PhotoBrowerControllerSetSingleImageSize(photoBrowserController:PhotoBrowserController) -> CGSize
+    /// 设置小图与小图之间的间距大小 默认是10.0
+    optional func PhotoBrowerControllerSetImageMargin(photoBrowserController:PhotoBrowserController) -> CGFloat
+    /// 设置一行放多少个小图 默认是3.0
+    optional func PhotoBrowerControllerSetImageNumberInRow(photoBrowserController:PhotoBrowserController) -> Int
+    /// 设置点击小图时的动画时长，默认是0.3秒
+    optional func PhotoBrowerControllerSetAnimationDuration(photoBrowserController:PhotoBrowserController) -> NSTimeInterval
+    /// 设置多个小图时候每个小图的大小
+    optional func PhotoBrowerControllerSetItemSize(photoBrowserController:PhotoBrowserController) -> CGSize
+    /// 设置占位图的资源名字,有默认图
+    optional func PhotoBrowerControllerSetPlaceHolder(photoBrowserController:PhotoBrowserController) -> String
+    /// 设置交互式消失时候出发的图片比例大小 默认是1.0
+    optional func PhotoBrowerControllerSetDismissScaleNumber(photoBrowserController:PhotoBrowserController) -> CGFloat
     
 }
 /** 展示小图的控制器
@@ -23,25 +37,25 @@ protocol PhotoBrowserDelegate: NSObjectProtocol {
 //MARK: - 展示小图的控制器
 class PhotoBrowserController: UIViewController {
     //MARK: - 可自定义属性
-    weak var delegate : PhotoBrowserDelegate?
+    weak var delegate : PhotoBrowserControllerDelegate?
     /// 单张图片大小 如果没有给定该参数，单张图片显示的时候就按照layout的大小的2倍显示
-    var singleImageSize : CGSize?
+    private var singleImageSize : CGSize?
     /// 图片间距 默认为 10
-    var imageMargin : CGFloat = 10.0
+    private var imageMargin : CGFloat = 10.0
     /// 一行图片数目 默认是3
-    var imageNumberInRow : Int = 3
+    private var imageNumberInRow : Int = 3
     // 动画时长
-    var AnimationDuration : NSTimeInterval = 0.3
+    private var animationDuration : NSTimeInterval = 0.3
     /// itemSize
-    var itemSize : CGSize = CGSizeMake(90, 90)
+    private var itemSize : CGSize = CGSizeMake(90, 90)
     /// 图片占位图
-    var placeHolder : String? {
+    private var placeHolder : String? {
         didSet {
             placeHolderName = placeHolder!
         }
     }
     /// 缩放触发动画的比例
-    var dismissScaleNumber : CGFloat? {
+    private var dismissScaleNumber : CGFloat? {
         didSet {
             dismissScale = dismissScaleNumber!
         }
@@ -61,12 +75,12 @@ class PhotoBrowserController: UIViewController {
         return cv
     }()
     /// URL元祖接收外界需要展示的数据
-    var URLList : (smallURLList : [NSURL], largeURLList : [NSURL])? {
+    var URLList : (smallURLList : [NSURL]?, largeURLList : [NSURL]?) {
         didSet {
+            // 如果大小图长度不同，不继续
+            assert(URLList.smallURLList?.count ?? 0 == URLList.largeURLList?.count ?? 0, "大小图URL数组长度必须相同！")
             // 根据数据转换成模型数组
-            if URLList != nil{
-                photoes = Photo.photoes(URLList!.smallURLList, largeURLList: URLList!.largeURLList)
-            }
+            photoes = Photo.photoes(URLList.smallURLList!, largeURLList: URLList.largeURLList!)
             // 计算自动布局
             calculateViewSize()
             collectionView?.reloadData()
@@ -86,15 +100,6 @@ class PhotoBrowserController: UIViewController {
     var collectionViewWidth : NSLayoutConstraint?
     
     //MARK: - 系统方法
-    /// 构造方法，必须设置代理
-    init(delegate : PhotoBrowserDelegate?){
-        super.init(nibName: nil, bundle: nil)
-        self.delegate = delegate
-    }
-
-    required init(coder aDecoder: NSCoder) {
-        super.init(coder: aDecoder)
-    }
     override func loadView() {
         view = self.collectionView!
         // 添加约束
@@ -109,6 +114,25 @@ class PhotoBrowserController: UIViewController {
         removeNotification()
     }
     //MARK: - 功能方法
+    // 设置属性
+    private func setInfo(){
+        /// 单张图片大小 如果没有给定该参数，单张图片显示的时候就按照layout的大小的2倍显示
+        singleImageSize = self.delegate?.PhotoBrowerControllerSetSingleImageSize?(self)
+        /// 图片间距 默认为 10
+        imageMargin = self.delegate?.PhotoBrowerControllerSetImageMargin?(self) ?? 10.0
+        /// 一行图片数目 默认是3
+        imageNumberInRow = self.delegate?.PhotoBrowerControllerSetImageNumberInRow?(self) ?? 3
+        // 动画时长
+        animationDuration = self.delegate?.PhotoBrowerControllerSetAnimationDuration?(self) ?? 0.3
+        /// itemSize
+        itemSize = self.delegate?.PhotoBrowerControllerSetSingleImageSize?(self) ?? CGSizeMake(90, 90)
+        /// 图片占位图
+        placeHolder = self.delegate?.PhotoBrowerControllerSetPlaceHolder?(self)
+        /// 缩放触发动画的比例
+        dismissScaleNumber = self.delegate?.PhotoBrowerControllerSetDismissScaleNumber?(self)
+
+        
+    }
     // 销毁注册的通知
     private func removeNotification(){
         NSNotificationCenter.defaultCenter().removeObserver(self)
@@ -314,7 +338,7 @@ class PhotoBrowserController: UIViewController {
         UIApplication.sharedApplication().keyWindow?.addSubview(backView)
         UIApplication.sharedApplication().keyWindow?.addSubview(imageView)
         // 开始动画
-        UIView.animateWithDuration(AnimationDuration, animations: { () in
+        UIView.animateWithDuration(animationDuration, animations: { () in
             // 获得需要回去的frame
             imageView.frame = startFrame
             backView.alpha = 0
@@ -368,7 +392,7 @@ class PhotoBrowserController: UIViewController {
         modalVC.modalPresentationStyle = UIModalPresentationStyle.Custom
 //        SVProgressHUD.dismiss()
         presentViewController(modalVC, animated: false){ () -> Void in
-            UIView.animateWithDuration(self.AnimationDuration, animations: { () -> Void in
+            UIView.animateWithDuration(self.animationDuration, animations: { () -> Void in
                 imageView.frame = endFrame
                 backView.alpha = 1
             }, completion: { (_) -> Void in
