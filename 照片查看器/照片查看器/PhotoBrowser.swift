@@ -12,22 +12,31 @@ import SDWebImage
 @objc protocol PhotoBrowserControllerDelegate: NSObjectProtocol {
     /// 设置单张图片的大小，如果可以预先获得图片大小，建议调用该方法修改 默认是itemSize的2倍长宽
     optional func PhotoBrowerControllerSetSingleImageSize(photoBrowserController:PhotoBrowserController) -> CGSize
+    
     /// 设置小图与小图之间的间距大小 默认是10.0
     optional func PhotoBrowerControllerSetImageMargin(photoBrowserController:PhotoBrowserController) -> CGFloat
+    
     /// 设置一行放多少个小图 默认是3.0
     optional func PhotoBrowerControllerSetImageNumberInRow(photoBrowserController:PhotoBrowserController) -> Int
+    
     /// 设置点击小图时的动画时长，默认是0.3秒
     optional func PhotoBrowerControllerSetAnimationDuration(photoBrowserController:PhotoBrowserController) -> NSTimeInterval
+    
     /// 设置多个小图时候每个小图的大小
     optional func PhotoBrowerControllerSetItemSize(photoBrowserController:PhotoBrowserController) -> CGSize
+    
     /// 设置占位图的资源,有默认图
     optional func PhotoBrowerControllerSetPlaceHolder(photoBrowserController:PhotoBrowserController) -> UIImage
+    
     /// 设置交互式消失时候出发的图片比例大小 默认是1.0
     optional func PhotoBrowerControllerSetDismissScaleNumber(photoBrowserController:PhotoBrowserController) -> CGFloat
+    
     /// 下载指示器线的宽度
     optional func PhotoBrowerControllerSetActivityLineWidth(photoBrowserController:PhotoBrowserController) -> CGFloat
+    
     /// 下载指示器背景颜色
     optional func PhotoBrowerControllerSetActivityBackgroundColor(photoBrowserController:PhotoBrowserController) -> UIColor
+    
     /// 下载指示器颜色
     optional func PhotoBrowerControllerSetActivityLineColor(photoBrowserController:PhotoBrowserController) -> UIColor
     
