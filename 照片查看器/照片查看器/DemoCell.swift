@@ -13,7 +13,7 @@ class DemoCell: UITableViewCell, PhotoBrowserDelegate {
 
     @IBOutlet weak var titleLabel: UILabel!
     
-    var photoVC : PhotoBrowser?
+    var photoVC : PhotoBrowserController?
     
     var photoView : UIView?
     
@@ -35,7 +35,7 @@ class DemoCell: UITableViewCell, PhotoBrowserDelegate {
     // 测试数组
     override func awakeFromNib() {
         super.awakeFromNib()
-        let photoVC = PhotoBrowser(delegate: self)
+        let photoVC = PhotoBrowserController(delegate: self)
         self.photoVC = photoVC
         photoView = photoVC.view
         self.contentView.addSubview(photoView!)

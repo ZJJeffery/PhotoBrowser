@@ -21,7 +21,7 @@ protocol PhotoBrowserDelegate: NSObjectProtocol {
     以此保持只有对应需要产生动作的控制器做出对应的响应
 */
 //MARK: - 展示小图的控制器
-class PhotoBrowser: UIViewController {
+class PhotoBrowserController: UIViewController {
     //MARK: - 可自定义属性
     weak var delegate : PhotoBrowserDelegate?
     /// 单张图片大小 如果没有给定该参数，单张图片显示的时候就按照layout的大小的2倍显示
@@ -385,7 +385,7 @@ class PhotoBrowser: UIViewController {
     }
 }
 //MARK: - UICollectionViewDataSource数据源方法
-extension PhotoBrowser : UICollectionViewDataSource {
+extension PhotoBrowserController : UICollectionViewDataSource {
 
     func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return self.photoes?.count ?? 0
@@ -401,7 +401,7 @@ extension PhotoBrowser : UICollectionViewDataSource {
     }
 }
 //MARK: - UICollectionViewDelegate代理方法
-extension PhotoBrowser : UICollectionViewDelegate {
+extension PhotoBrowserController : UICollectionViewDelegate {
     func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath) {
         // 走之前注册通知
         regiserNotification()
