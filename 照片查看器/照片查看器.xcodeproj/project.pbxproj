@@ -18,7 +18,6 @@
 		968BA0431B11620A00BEB4E1 /* PhotoBrowser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 968BA0421B11620A00BEB4E1 /* PhotoBrowser.swift */; };
 		968BA0471B11688A00BEB4E1 /* DemoTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 968BA0461B11688A00BEB4E1 /* DemoTableViewController.swift */; };
 		968BA0491B11694F00BEB4E1 /* DemoCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 968BA0481B11694F00BEB4E1 /* DemoCell.swift */; };
-		96C95F281B13F74D00EEBE09 /* Photo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96C95F271B13F74D00EEBE09 /* Photo.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -46,7 +45,6 @@
 		968BA0421B11620A00BEB4E1 /* PhotoBrowser.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PhotoBrowser.swift; sourceTree = "<group>"; };
 		968BA0461B11688A00BEB4E1 /* DemoTableViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DemoTableViewController.swift; sourceTree = "<group>"; };
 		968BA0481B11694F00BEB4E1 /* DemoCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DemoCell.swift; sourceTree = "<group>"; };
-		96C95F271B13F74D00EEBE09 /* Photo.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Photo.swift; sourceTree = "<group>"; };
 		A6669C1AF35BD91CFB3C9F00 /* Pods.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Pods.release.xcconfig; path = "Pods/Target Support Files/Pods/Pods.release.xcconfig"; sourceTree = "<group>"; };
 		DFC01D17255FA22599C1B365 /* Pods.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Pods.debug.xcconfig; path = "Pods/Target Support Files/Pods/Pods.debug.xcconfig"; sourceTree = "<group>"; };
 		EE0F38A9C1D2D7BE55E6C157 /* Pods.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -112,7 +110,6 @@
 				9608BF221B0D74FE00582077 /* LaunchScreen.xib */,
 				9608BF171B0D74FE00582077 /* Supporting Files */,
 				968BA0421B11620A00BEB4E1 /* PhotoBrowser.swift */,
-				96C95F271B13F74D00EEBE09 /* Photo.swift */,
 			);
 			path = "照片查看器";
 			sourceTree = "<group>";
@@ -303,7 +300,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				96C95F281B13F74D00EEBE09 /* Photo.swift in Sources */,
 				968BA0431B11620A00BEB4E1 /* PhotoBrowser.swift in Sources */,
 				968BA0491B11694F00BEB4E1 /* DemoCell.swift in Sources */,
 				9608BF3E1B0D780000582077 /* Picture.swift in Sources */,

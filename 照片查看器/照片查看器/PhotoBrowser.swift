@@ -1,5 +1,5 @@
 //
-//  PhotoBrowserScanViewController.swift
+//  PhotoBrowser.swift
 //  照片查看器
 //
 //  Created by Jiajun Zheng on 15/5/24.
@@ -8,25 +8,10 @@
 import UIKit
 import SDWebImage
 
-
-//MARK: - 常量列表
-/// 通知列表
-// 普通dismiss通知
-private let PhotoBrowserStartDismissNotification = "PhotoBrowserStartDismissNotification"
-private let PhotoBrowserEndDismissNotification = "PhotoBrowserEndDismissNotification"
-// 交互式dismiss通知
-private let PhotoBrowserStartInteractiveDismissNotification = "PhotoBrowserStartInteractiveDismissNotification"
-/// 交互时颜色变化通知
-private let PhotoBrowserDidScaleNotification = "PhotoBrowserDidScaleNotification"
-
-///重用id
-private let reuseIdentifier = "PhotoBrowserCellCell"
-private let reusedId = "PhotoCell"
-
-/// 触发dismiss的Scale大小
-private let dismissScale : CGFloat = 1.0
-/// 图片占位图
-private var placeHolderName : String = "placeHolder"
+//MARK: - PhotoBrowser代理协议
+protocol PhotoBrowserDelegate: NSObjectProtocol {
+    
+}
 /** 展示小图的控制器
     该视图通过封装collectionView来实现小图的展示，同时实现了很多动画方法用于变相实现了转场动画，
     内部主要通过自定义转场动画使得该视图保持不消失，然后根据接听不同事件的通知，做出对应的动画实现
@@ -36,8 +21,9 @@ private var placeHolderName : String = "placeHolder"
     以此保持只有对应需要产生动作的控制器做出对应的响应
 */
 //MARK: - 展示小图的控制器
-class PhotoBrowserScanViewController: UIViewController {
+class PhotoBrowser: UIViewController {
     //MARK: - 可自定义属性
+    weak var delegate : PhotoBrowserDelegate?
     /// 单张图片大小 如果没有给定该参数，单张图片显示的时候就按照layout的大小的2倍显示
     var singleImageSize : CGSize?
     /// 图片间距 默认为 10
@@ -52,6 +38,12 @@ class PhotoBrowserScanViewController: UIViewController {
     var placeHolder : String? {
         didSet {
             placeHolderName = placeHolder!
+        }
+    }
+    /// 缩放触发动画的比例
+    var dismissScaleNumber : CGFloat? {
+        didSet {
+            dismissScale = dismissScaleNumber!
         }
     }
     //MARK: 其他属性
@@ -94,6 +86,15 @@ class PhotoBrowserScanViewController: UIViewController {
     var collectionViewWidth : NSLayoutConstraint?
     
     //MARK: - 系统方法
+    /// 构造方法，必须设置代理
+    init(delegate : PhotoBrowserDelegate?){
+        super.init(nibName: nil, bundle: nil)
+        self.delegate = delegate
+    }
+
+    required init(coder aDecoder: NSCoder) {
+        super.init(coder: aDecoder)
+    }
     override func loadView() {
         view = self.collectionView!
         // 添加约束
@@ -384,7 +385,7 @@ class PhotoBrowserScanViewController: UIViewController {
     }
 }
 //MARK: - UICollectionViewDataSource数据源方法
-extension PhotoBrowserScanViewController : UICollectionViewDataSource {
+extension PhotoBrowser : UICollectionViewDataSource {
 
     func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return self.photoes?.count ?? 0
@@ -400,7 +401,7 @@ extension PhotoBrowserScanViewController : UICollectionViewDataSource {
     }
 }
 //MARK: - UICollectionViewDelegate代理方法
-extension PhotoBrowserScanViewController : UICollectionViewDelegate {
+extension PhotoBrowser : UICollectionViewDelegate {
     func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath) {
         // 走之前注册通知
         regiserNotification()
@@ -660,6 +661,10 @@ class SinglePhotoBrowserViewController: UIViewController {
             imageView.image = nil
             // 能否拿拿得到小图
             if let smallImage = SDWebImageManager.sharedManager().imageCache.imageFromDiskCacheForKey(smallURL?.absoluteString) {
+                // 先小图显示
+                self.imageView.image = smallImage
+                self.setUpImage(smallImage)
+                // 下载大图
                 SDWebImageManager.sharedManager().downloadImageWithURL(largeURL, options: SDWebImageOptions.allZeros, progress: nil, completed: { (image, error, _, _, _) -> Void in
                     if image != nil {
                         self.imageView.image = image
@@ -800,3 +805,44 @@ extension SinglePhotoBrowserViewController : UIScrollViewDelegate {
         scrollView.contentInset = UIEdgeInsetsMake(0, 0, 0, 0)
     }
 }
+//MARK: - 处理图片的模型
+class Photo: NSObject {
+    //MARK: - 属性
+    // 小图地址
+    var smallURL: NSURL
+    // 大图地址
+    var largeURL: NSURL
+    //内部方法
+    /// 初始化方法
+    init(smallURL : NSURL, largeURL : NSURL){
+        self.smallURL = smallURL
+        self.largeURL = largeURL
+    }
+    /// 快速创建方法
+    class func photoes(smallURLList : [NSURL], largeURLList : [NSURL]) -> [Photo]{
+        var photoM = [Photo]()
+        for i in 0..<smallURLList.count {
+            let modal = Photo(smallURL: smallURLList[i], largeURL: largeURLList[i])
+            photoM.append(modal)
+        }
+        return photoM
+    }
+}
+//MARK: - 常量列表
+/// 通知列表
+// 普通dismiss通知
+private let PhotoBrowserStartDismissNotification = "PhotoBrowserStartDismissNotification"
+private let PhotoBrowserEndDismissNotification = "PhotoBrowserEndDismissNotification"
+// 交互式dismiss通知
+private let PhotoBrowserStartInteractiveDismissNotification = "PhotoBrowserStartInteractiveDismissNotification"
+/// 交互时颜色变化通知
+private let PhotoBrowserDidScaleNotification = "PhotoBrowserDidScaleNotification"
+
+///重用id
+private let reuseIdentifier = "PhotoBrowserCellCell"
+private let reusedId = "PhotoCell"
+
+/// 触发dismiss的Scale大小
+private var dismissScale : CGFloat = 1.0
+/// 图片占位图
+private var placeHolderName : String = "placeHolder"
