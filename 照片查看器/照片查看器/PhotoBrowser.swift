@@ -688,9 +688,15 @@ class SinglePhotoBrowserViewController: UIViewController {
                 // 先小图显示
                 self.imageView.image = smallImage
                 self.setUpImage(smallImage)
+                let activity = UIActivityIndicatorView()
+                activity.activityIndicatorViewStyle = UIActivityIndicatorViewStyle.WhiteLarge
+                activity.startAnimating()
+                activity.center = self.imageView.center
+                self.imageView.addSubview(activity)
                 // 下载大图
                 SDWebImageManager.sharedManager().downloadImageWithURL(largeURL, options: SDWebImageOptions.allZeros, progress: nil, completed: { (image, error, _, _, _) -> Void in
                     if image != nil {
+                        activity.removeFromSuperview()
                         self.imageView.image = image
                         self.setUpImage(image)
                         return
