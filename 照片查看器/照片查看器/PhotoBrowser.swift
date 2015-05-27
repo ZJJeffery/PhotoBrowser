@@ -664,8 +664,20 @@ class SinglePhotoBrowserViewController: UIViewController {
             largeURL = photo?.largeURL
         }
     }
+    private lazy var activity : ActivityView = {
+        let activity = ActivityView(frame: CGRectMake(0, 0, 44, 44))
+        activity.layer.cornerRadius = 22
+        activity.layer.masksToBounds = true
+        activity.backgroundColor = activityBackgroundColor
+        activity.lineWidth = activityLineWidth
+        activity.lineColor = activityLineColor
+        activity.center = CGPointMake(UIScreen.mainScreen().bounds.width * 0.5, UIScreen.mainScreen().bounds.height * 0.5)
+        
+        self.view.addSubview(activity)
+        return activity
+    }()
     /// 滚动视图
-    lazy var scrollView : UIScrollView = {
+    private lazy var scrollView : UIScrollView = {
         let sv = UIScrollView(frame: UIScreen.mainScreen().bounds)
         // 设置代理
         sv.delegate = self
@@ -675,7 +687,7 @@ class SinglePhotoBrowserViewController: UIViewController {
         return sv
         }()
     /// 图像视图
-    lazy var imageView : UIImageView = {
+    private lazy var imageView : UIImageView = {
         let iv = UIImageView()
         return iv
         }()
@@ -688,15 +700,14 @@ class SinglePhotoBrowserViewController: UIViewController {
                 // 先小图显示
                 self.imageView.image = smallImage
                 self.setUpImage(smallImage)
-                let activity = UIActivityIndicatorView()
-                activity.activityIndicatorViewStyle = UIActivityIndicatorViewStyle.WhiteLarge
-                activity.startAnimating()
-                activity.center = self.imageView.center
-                self.imageView.addSubview(activity)
+                self.activity.hidden = false
                 // 下载大图
-                SDWebImageManager.sharedManager().downloadImageWithURL(largeURL, options: SDWebImageOptions.allZeros, progress: nil, completed: { (image, error, _, _, _) -> Void in
+                SDWebImageManager.sharedManager().downloadImageWithURL(largeURL, options: SDWebImageOptions.allZeros, progress: { (finished, total) -> Void in
+                    let progress = Double(finished) / Double(total) + 0.01
+                    self.activity.progress = progress
+                    }, completed: { (image, error, _, _, _) -> Void in
                     if image != nil {
-                        activity.removeFromSuperview()
+                        self.activity.hidden = true
                         self.imageView.image = image
                         self.setUpImage(image)
                         return
@@ -717,9 +728,9 @@ class SinglePhotoBrowserViewController: UIViewController {
         }
     }
     // 小图URL
-    var smallURL : NSURL?
+    private var smallURL : NSURL?
     // 当前索引
-    var index : Int?
+    private var index : Int?
     
     //MARK: - 内部方法
     override func loadView() {
@@ -858,6 +869,39 @@ class Photo: NSObject {
         return photoM
     }
 }
+//MARK: - 下载进度指示器
+class ActivityView: UIView {
+    //MARK: - 属性
+    // 进度
+    var progress  = 0.0 {
+        didSet {
+            setNeedsDisplay()
+        }
+    }
+    // 线长度
+    var lineWidth : CGFloat = 5.0
+    // 线颜色
+    var lineColor : UIColor = UIColor.whiteColor()
+    
+    override func drawRect(rect: CGRect) {
+        // Drawing code
+        let size = rect.size
+        let centerPoint = CGPointMake(size.width * 0.5, size.height * 0.5)
+        let r = CGFloat((min(size.width, size.height) - lineWidth - 5.0) * 0.5)
+        let start = CGFloat(-M_PI_2)
+        let end = CGFloat(2 * M_PI * progress + Double(start))
+        
+        let path = UIBezierPath(arcCenter: centerPoint, radius: r, startAngle: start, endAngle: end, clockwise: true)
+        
+        path.lineWidth = lineWidth
+        path.lineCapStyle = kCGLineCapRound
+        
+        lineColor.setStroke()
+        
+        path.stroke()
+        
+    }
+}
 //MARK: - 常量列表
 /// 通知列表
 // 普通dismiss通知
@@ -876,3 +920,7 @@ private let reusedId = "PhotoCell"
 private var dismissScale : CGFloat = 1.0
 /// 图片占位图
 private var placeHolderName : String = "placeHolder"
+/// 图片下载指示器属性
+private var activityLineWidth : CGFloat = 5.0
+private var activityLineColor = UIColor.whiteColor()
+private var activityBackgroundColor = UIColor(red: 0, green: 0, blue: 0, alpha: 0.4)
