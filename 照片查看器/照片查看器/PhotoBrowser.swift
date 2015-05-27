@@ -24,6 +24,12 @@ import SDWebImage
     optional func PhotoBrowerControllerSetPlaceHolder(photoBrowserController:PhotoBrowserController) -> String
     /// 设置交互式消失时候出发的图片比例大小 默认是1.0
     optional func PhotoBrowerControllerSetDismissScaleNumber(photoBrowserController:PhotoBrowserController) -> CGFloat
+    /// 下载指示器线的宽度
+    optional func PhotoBrowerControllerSetActivityLineWidth(photoBrowserController:PhotoBrowserController) -> CGFloat
+    /// 下载指示器背景颜色
+    optional func PhotoBrowerControllerSetActivityBackgroundColor(photoBrowserController:PhotoBrowserController) -> UIColor
+    /// 下载指示器颜色
+    optional func PhotoBrowerControllerSetActivityLineColor(photoBrowserController:PhotoBrowserController) -> UIColor
     
 }
 /** 展示小图的控制器
@@ -49,15 +55,31 @@ class PhotoBrowserController: UIViewController {
     /// itemSize
     private var itemSize : CGSize = CGSizeMake(90, 90)
     /// 图片占位图
-    private var placeHolder : String? {
+    private var placeHolder : String =  "placeHolder" {
         didSet {
-            placeHolderName = placeHolder!
+            placeHolderName = placeHolder
         }
     }
     /// 缩放触发动画的比例
-    private var dismissScaleNumber : CGFloat? {
+    private var dismissScaleNumber : CGFloat =  1.0 {
         didSet {
-            dismissScale = dismissScaleNumber!
+            dismissScale = dismissScaleNumber
+        }
+    }
+    /// 进度追踪显示属性
+    private var aWidth : CGFloat =  5.0 {
+        didSet {
+            activityLineWidth = self.aWidth
+        }
+    }
+    private var aColor : UIColor =  UIColor.whiteColor() {
+        didSet {
+            activityLineColor = self.aColor
+        }
+    }
+    private var aBackColor : UIColor =  UIColor(red: 0, green: 0, blue: 0, alpha: 0.4) {
+        didSet {
+            activityBackgroundColor = self.aBackColor
         }
     }
     //MARK: 其他属性
@@ -116,22 +138,47 @@ class PhotoBrowserController: UIViewController {
     //MARK: - 功能方法
     // 设置属性
     private func setInfo(){
+        if delegate == nil{
+            return
+        }
         /// 单张图片大小 如果没有给定该参数，单张图片显示的时候就按照layout的大小的2倍显示
-        singleImageSize = self.delegate?.PhotoBrowerControllerSetSingleImageSize?(self)
+        singleImageSize = self.delegate!.PhotoBrowerControllerSetSingleImageSize?(self)
         /// 图片间距 默认为 10
-        imageMargin = self.delegate?.PhotoBrowerControllerSetImageMargin?(self) ?? 10.0
+        if let result = self.delegate!.PhotoBrowerControllerSetImageMargin?(self) {
+            imageMargin = result
+        }
         /// 一行图片数目 默认是3
-        imageNumberInRow = self.delegate?.PhotoBrowerControllerSetImageNumberInRow?(self) ?? 3
+        if let result = self.delegate!.PhotoBrowerControllerSetImageNumberInRow?(self) {
+            imageNumberInRow = result
+        }
         // 动画时长
-        animationDuration = self.delegate?.PhotoBrowerControllerSetAnimationDuration?(self) ?? 0.3
+        if let result = self.delegate!.PhotoBrowerControllerSetAnimationDuration?(self) {
+            animationDuration = result
+        }
         /// itemSize
-        itemSize = self.delegate?.PhotoBrowerControllerSetSingleImageSize?(self) ?? CGSizeMake(90, 90)
+        if let result = self.delegate!.PhotoBrowerControllerSetSingleImageSize?(self) {
+            itemSize = result
+        }
         /// 图片占位图
-        placeHolder = self.delegate?.PhotoBrowerControllerSetPlaceHolder?(self)
+        if let result = self.delegate!.PhotoBrowerControllerSetPlaceHolder?(self) {
+            placeHolder = result
+        }
         /// 缩放触发动画的比例
-        dismissScaleNumber = self.delegate?.PhotoBrowerControllerSetDismissScaleNumber?(self)
-
-        
+        if let result = self.delegate!.PhotoBrowerControllerSetDismissScaleNumber?(self) {
+            dismissScaleNumber = result
+        }
+        /// 线条宽度
+        if let result = self.delegate!.PhotoBrowerControllerSetActivityLineWidth?(self){
+            activityLineWidth = result
+        }
+        /// 线条颜色
+        if let result = self.delegate!.PhotoBrowerControllerSetActivityLineColor?(self){
+            activityLineColor = result
+        }
+        /// 指示器背景颜色
+        if let result = self.delegate!.PhotoBrowerControllerSetActivityBackgroundColor?(self){
+            activityBackgroundColor = result
+        }
     }
     // 销毁注册的通知
     private func removeNotification(){
@@ -700,13 +747,17 @@ class SinglePhotoBrowserViewController: UIViewController {
                 // 先小图显示
                 self.imageView.image = smallImage
                 self.setUpImage(smallImage)
+                // 显示指示器
                 self.activity.hidden = false
                 // 下载大图
                 SDWebImageManager.sharedManager().downloadImageWithURL(largeURL, options: SDWebImageOptions.allZeros, progress: { (finished, total) -> Void in
+                    // 进度追踪
                     let progress = Double(finished) / Double(total) + 0.01
                     self.activity.progress = progress
+                    
                     }, completed: { (image, error, _, _, _) -> Void in
                     if image != nil {
+                        // 下载完毕隐藏进度
                         self.activity.hidden = true
                         self.imageView.image = image
                         self.setUpImage(image)
@@ -887,7 +938,7 @@ class ActivityView: UIView {
         // Drawing code
         let size = rect.size
         let centerPoint = CGPointMake(size.width * 0.5, size.height * 0.5)
-        let r = CGFloat((min(size.width, size.height) - lineWidth - 5.0) * 0.5)
+        let r = CGFloat((min(size.width, size.height) - lineWidth - 8.0) * 0.5)
         let start = CGFloat(-M_PI_2)
         let end = CGFloat(2 * M_PI * progress + Double(start))
         
@@ -913,7 +964,7 @@ private let PhotoBrowserStartInteractiveDismissNotification = "PhotoBrowserStart
 private let PhotoBrowserDidScaleNotification = "PhotoBrowserDidScaleNotification"
 
 ///重用id
-private let reuseIdentifier = "PhotoBrowserCellCell"
+private let reuseIdentifier = "PhotoBrowserCell"
 private let reusedId = "PhotoCell"
 
 /// 触发dismiss的Scale大小
