@@ -20,8 +20,8 @@ import SDWebImage
     optional func PhotoBrowerControllerSetAnimationDuration(photoBrowserController:PhotoBrowserController) -> NSTimeInterval
     /// 设置多个小图时候每个小图的大小
     optional func PhotoBrowerControllerSetItemSize(photoBrowserController:PhotoBrowserController) -> CGSize
-    /// 设置占位图的资源名字,有默认图
-    optional func PhotoBrowerControllerSetPlaceHolder(photoBrowserController:PhotoBrowserController) -> String
+    /// 设置占位图的资源,有默认图
+    optional func PhotoBrowerControllerSetPlaceHolder(photoBrowserController:PhotoBrowserController) -> UIImage
     /// 设置交互式消失时候出发的图片比例大小 默认是1.0
     optional func PhotoBrowerControllerSetDismissScaleNumber(photoBrowserController:PhotoBrowserController) -> CGFloat
     /// 下载指示器线的宽度
@@ -54,34 +54,7 @@ class PhotoBrowserController: UIViewController {
     private var animationDuration : NSTimeInterval = 0.3
     /// itemSize
     private var itemSize : CGSize = CGSizeMake(90, 90)
-    /// 图片占位图
-    private var placeHolder : String =  "placeHolder" {
-        didSet {
-            placeHolderName = placeHolder
-        }
-    }
-    /// 缩放触发动画的比例
-    private var dismissScaleNumber : CGFloat =  1.0 {
-        didSet {
-            dismissScale = dismissScaleNumber
-        }
-    }
-    /// 进度追踪显示属性
-    private var aWidth : CGFloat =  5.0 {
-        didSet {
-            activityLineWidth = self.aWidth
-        }
-    }
-    private var aColor : UIColor =  UIColor.whiteColor() {
-        didSet {
-            activityLineColor = self.aColor
-        }
-    }
-    private var aBackColor : UIColor =  UIColor(red: 0, green: 0, blue: 0, alpha: 0.4) {
-        didSet {
-            activityBackgroundColor = self.aBackColor
-        }
-    }
+    
     //MARK: 其他属性
     /// 布局约束
     var layout : UICollectionViewFlowLayout = UICollectionViewFlowLayout()
@@ -161,11 +134,11 @@ class PhotoBrowserController: UIViewController {
         }
         /// 图片占位图
         if let result = self.delegate!.PhotoBrowerControllerSetPlaceHolder?(self) {
-            placeHolder = result
+            placeHolderImage = result
         }
         /// 缩放触发动画的比例
         if let result = self.delegate!.PhotoBrowerControllerSetDismissScaleNumber?(self) {
-            dismissScaleNumber = result
+            dismissScale = result
         }
         /// 线条宽度
         if let result = self.delegate!.PhotoBrowerControllerSetActivityLineWidth?(self){
@@ -360,7 +333,7 @@ class PhotoBrowserController: UIViewController {
         imageView.contentMode = UIViewContentMode.ScaleAspectFill
         let photo = self.photoes![index]
         let url = photo.smallURL
-        imageView.sd_setImageWithURL(url, placeholderImage: UIImage(named: placeHolderName))
+        imageView.sd_setImageWithURL(url, placeholderImage: placeHolderImage)
         // 确定高度
         var height = endFrame.height * scale
         // 统一计算位置
@@ -427,7 +400,7 @@ class PhotoBrowserController: UIViewController {
         var endFrame = endFrameList![indexPath.item]
         let photo = self.photoes![indexPath.item]
         let url = photo.smallURL
-        imageView.sd_setImageWithURL(url, placeholderImage: UIImage(named: placeHolderName))
+        imageView.sd_setImageWithURL(url, placeholderImage: placeHolderImage)
         imageView.contentMode = UIViewContentMode.ScaleAspectFill
         imageView.clipsToBounds = true
         // 将遮罩添加到window
@@ -499,7 +472,7 @@ class PhotoCell: UICollectionViewCell {
     /// 图像地址
     var url : NSURL? {
         didSet {
-            imageView!.sd_setImageWithURL(url, placeholderImage: UIImage(named: placeHolderName))
+            imageView!.sd_setImageWithURL(url, placeholderImage: placeHolderImage)
         }
     }
     // 功能方法
@@ -773,7 +746,6 @@ class SinglePhotoBrowserViewController: UIViewController {
             }
             // 小图都拿不到
 //            SVProgressHUD.showErrorWithStatus("网络不给力")
-            let placeHolderImage = UIImage(named: placeHolderName)!
             imageView.image = placeHolderImage
             setUpImage(placeHolderImage)
         }
@@ -970,7 +942,13 @@ private let reusedId = "PhotoCell"
 /// 触发dismiss的Scale大小
 private var dismissScale : CGFloat = 1.0
 /// 图片占位图
-private var placeHolderName : String = "placeHolder"
+private var placeHolderImage : UIImage = {
+    let bundle = NSBundle(forClass: PhotoBrowserController.self)
+    let url = bundle.URLForResource("image", withExtension: "bundle")!
+    let imageBundle = NSBundle(URL: url)!
+    let path = imageBundle.pathForResource("placeHolder", ofType: "png")
+    return UIImage(contentsOfFile: path!)!
+}()
 /// 图片下载指示器属性
 private var activityLineWidth : CGFloat = 5.0
 private var activityLineColor = UIColor.whiteColor()
