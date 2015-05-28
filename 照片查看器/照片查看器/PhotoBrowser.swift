@@ -10,8 +10,6 @@ import SDWebImage
 
 //MARK: - PhotoBrowser代理协议
 @objc protocol PhotoBrowserControllerDelegate: NSObjectProtocol {
-    /// 设置单张图片的大小，如果可以预先获得图片大小，建议调用该方法修改 默认是itemSize的2倍长宽
-    optional func PhotoBrowerControllerSetSingleImageSize(photoBrowserController:PhotoBrowserController) -> CGSize
     
     /// 设置小图与小图之间的间距大小 默认是10.0
     optional func PhotoBrowerControllerSetImageMargin(photoBrowserController:PhotoBrowserController) -> CGFloat
@@ -54,7 +52,7 @@ class PhotoBrowserController: UIViewController {
     //MARK: - 可自定义属性
     weak var delegate : PhotoBrowserControllerDelegate?
     /// 单张图片大小 如果没有给定该参数，单张图片显示的时候就按照layout的大小的2倍显示
-    private var singleImageSize : CGSize?
+    var singleImageSize : CGSize?
     /// 图片间距 默认为 10
     private var imageMargin : CGFloat = 10.0
     /// 一行图片数目 默认是3
@@ -123,8 +121,6 @@ class PhotoBrowserController: UIViewController {
         if delegate == nil{
             return
         }
-        /// 单张图片大小 如果没有给定该参数，单张图片显示的时候就按照layout的大小的2倍显示
-        singleImageSize = self.delegate!.PhotoBrowerControllerSetSingleImageSize?(self)
         /// 图片间距 默认为 10
         if let result = self.delegate!.PhotoBrowerControllerSetImageMargin?(self) {
             imageMargin = result
@@ -138,7 +134,7 @@ class PhotoBrowserController: UIViewController {
             animationDuration = result
         }
         /// itemSize
-        if let result = self.delegate!.PhotoBrowerControllerSetSingleImageSize?(self) {
+        if let result = self.delegate!.PhotoBrowerControllerSetItemSize?(self) {
             itemSize = result
         }
         /// 图片占位图
@@ -533,6 +529,7 @@ class PhotoBrowserViewController: UIViewController {
         cv.backgroundView?.backgroundColor = UIColor.blackColor()
         // 设置数据源代理
         cv.dataSource = self
+        cv.delegate = self
         // 设置其他属性
         cv.pagingEnabled = true
         cv.showsHorizontalScrollIndicator = false
@@ -542,6 +539,9 @@ class PhotoBrowserViewController: UIViewController {
     lazy var closeBtn : UIButton = {
         return self.createButton("关闭")
         }()
+    lazy var saveBtn : UIButton = {
+        return self.createButton("保存")
+    }()
     /// 浏览的位置
     var index : Int?
     /// 所有frame对于主视图的位置
@@ -556,9 +556,11 @@ class PhotoBrowserViewController: UIViewController {
         view.addSubview(self.collectionView)
         // 创建约束
         var cons = [AnyObject]()
-        cons += NSLayoutConstraint.constraintsWithVisualFormat("H:|-20-[btn(80)]", options: NSLayoutFormatOptions(0), metrics: nil, views: ["btn" : closeBtn])
+        cons += NSLayoutConstraint.constraintsWithVisualFormat("H:|-20-[closeBtn(80)]-10-[saveBtn(80)]", options: NSLayoutFormatOptions(0), metrics: nil, views: ["closeBtn" : closeBtn, "saveBtn" : saveBtn])
         
-        cons += NSLayoutConstraint.constraintsWithVisualFormat("V:[btn]-20-|", options: NSLayoutFormatOptions(0), metrics: nil, views: ["btn" : closeBtn])
+        cons += NSLayoutConstraint.constraintsWithVisualFormat("V:[closeBtn]-20-|", options: NSLayoutFormatOptions(0), metrics: nil, views: ["closeBtn" : closeBtn])
+        
+        cons += NSLayoutConstraint.constraintsWithVisualFormat("V:[saveBtn]-20-|", options: NSLayoutFormatOptions(0), metrics: nil, views: ["saveBtn" : saveBtn])
         // 添加约束
         view.addConstraints(cons)
         
@@ -567,13 +569,17 @@ class PhotoBrowserViewController: UIViewController {
     }
     override func viewDidLoad() {
         // 注册cell
-        collectionView.registerClass(PhotoBrowserCell.self, forCellWithReuseIdentifier: reuseIdentifier)
+        collectionView.registerClass(PhotoBrowserCell.self, forCellWithReuseIdentifier: reuseIdBrowser)
         // 注册通知
         registerNotification()
     }
     override func viewDidLayoutSubviews() {
         let indexPath = NSIndexPath(forItem: index!, inSection: 0)
         collectionView.scrollToItemAtIndexPath(indexPath, atScrollPosition: UICollectionViewScrollPosition.allZeros, animated: false)
+    }
+    override func viewDidAppear(animated: Bool) {
+        // 手动先检查保存按钮是否可以开启
+        checkSaveBtn()
     }
     // 销毁通知
     deinit{
@@ -582,7 +588,6 @@ class PhotoBrowserViewController: UIViewController {
     //MARK: - 监听方法
     /// 关闭视图
     func close() {
-//        SVProgressHUD.dismiss()
         // 确定关闭的图像索引
         let indexPath = collectionView.indexPathsForVisibleItems().last as! NSIndexPath
         let index = indexPath.item
@@ -601,13 +606,16 @@ class PhotoBrowserViewController: UIViewController {
         NSNotificationCenter.defaultCenter().addObserver(self, selector: "didDismiss", name: PhotoBrowserEndDismissNotification, object: nil)
         // 注册通知
         NSNotificationCenter.defaultCenter().addObserver(self, selector: "didScale:", name: PhotoBrowserDidScaleNotification, object: nil)
+        // 注册通知
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: "checkSaveBtn", name: SaveBtnEnableNotification, object: nil)
     }
     /// 创建按钮
     private func createButton(title: String) -> UIButton {
         let btn = UIButton()
         btn.setTitle(title, forState: UIControlState.Normal)
         btn.setTitleColor(UIColor.whiteColor(), forState: UIControlState.Normal)
-        btn.backgroundColor = UIColor.brownColor()
+        btn.setTitleColor(UIColor.grayColor(), forState: UIControlState.Disabled)
+        btn.backgroundColor = UIColor(red: 0, green: 0, blue: 0, alpha: 0.2)
         view.addSubview(btn)
         // 设置自动布局须关闭
         btn.setTranslatesAutoresizingMaskIntoConstraints(false)
@@ -618,7 +626,12 @@ class PhotoBrowserViewController: UIViewController {
         let scale = noti.userInfo!["scale"] as! CGFloat
         // 隐藏关闭按钮
         closeBtn.hidden = scale < dismissScale
+        saveBtn.hidden = scale < dismissScale
         collectionView.backgroundView?.alpha = scale
+    }
+    /// 检查按钮
+    func checkSaveBtn() {
+        self.scrollViewDidScroll(self.collectionView)
     }
 }
 //MARK: - PhotoBrowserViewController的数据源方法
@@ -628,7 +641,7 @@ extension PhotoBrowserViewController: UICollectionViewDataSource {
     }
     
     func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCellWithReuseIdentifier(reuseIdentifier, forIndexPath: indexPath) as! PhotoBrowserCell
+        let cell = collectionView.dequeueReusableCellWithReuseIdentifier(reuseIdBrowser, forIndexPath: indexPath) as! PhotoBrowserCell
         // 添加子控制器
         if !(childViewControllers as NSArray).containsObject(cell.viewerVC!) {
             addChildViewController(cell.viewerVC!)
@@ -639,6 +652,18 @@ extension PhotoBrowserViewController: UICollectionViewDataSource {
         cell.index = indexPath.item
         return cell
     }
+}
+//MARK: - PhotoBrowserViewController的代理方法
+extension PhotoBrowserViewController: UICollectionViewDelegate {
+    func scrollViewDidScroll(scrollView: UIScrollView) {
+        let sWidth = UIScreen.mainScreen().bounds.width
+        let offset = scrollView.contentOffset.x
+        let index = Int((offset + (sWidth * CGFloat(0.5))) / sWidth)
+        let photo = self.photoes![index]
+        saveBtn.enabled = SDWebImageManager.sharedManager().cachedImageExistsForURL(photo.largeURL)
+        println(saveBtn.enabled)
+    }
+    
 }
 /** 单大图图展示Cell
     通过传递单图处理的控制器，其他的实现都是通过控制器内部实现，cell只是起到了重用和组织的作用
@@ -743,18 +768,18 @@ class SinglePhotoBrowserViewController: UIViewController {
                         self.activity.hidden = true
                         self.imageView.image = image
                         self.setUpImage(image)
+                        // 大图下载完毕，告诉上一级可以启用保存按钮
+                        NSNotificationCenter.defaultCenter().postNotificationName(SaveBtnEnableNotification, object: nil)
                         return
                     }
                     //如果大图出错，打印错误显示不给力
                     self.imageView.image = smallImage
                     self.setUpImage(smallImage)
                     println("largeURL: \(self.largeURL) loadError: \(error)")
-//                    SVProgressHUD.showErrorWithStatus("网络不给力")
                 })
                 return
             }
             // 小图都拿不到
-//            SVProgressHUD.showErrorWithStatus("网络不给力")
             imageView.image = placeHolderImage
             setUpImage(placeHolderImage)
         }
@@ -769,20 +794,8 @@ class SinglePhotoBrowserViewController: UIViewController {
         view = UIView(frame: UIScreen.mainScreen().bounds)
         view.addSubview(scrollView)
         scrollView.addSubview(imageView)
-        // 设置SVProgressHUD
-//        setSVProgressHUD()
-    }
-    override func viewDidDisappear(animated: Bool) {
-        super.viewDidDisappear(animated)
-//        SVProgressHUD.dismiss()
     }
     //MARK: - 功能方法
-    // 设置SVProgressHUD样式
-//    private func setSVProgressHUD(){
-//        SVProgressHUD.setBackgroundColor(UIColor(red: 0, green: 0, blue: 0, alpha: 0.5))
-//        SVProgressHUD.setForegroundColor(UIColor.whiteColor())
-//        SVProgressHUD.setRingThickness(8.0)
-//    }
     // 重置scrollView属性
     private func resetScrollView() {
         scrollView.contentSize = CGSizeZero
@@ -943,9 +956,10 @@ private let PhotoBrowserEndDismissNotification = "PhotoBrowserEndDismissNotifica
 private let PhotoBrowserStartInteractiveDismissNotification = "PhotoBrowserStartInteractiveDismissNotification"
 /// 交互时颜色变化通知
 private let PhotoBrowserDidScaleNotification = "PhotoBrowserDidScaleNotification"
-
+/// 大图下载完成启用保存按钮的通知
+private let SaveBtnEnableNotification = "SaveBtnEnableNotification"
 ///重用id
-private let reuseIdentifier = "PhotoBrowserCell"
+private let reuseIdBrowser = "PhotoBrowserCell"
 private let reusedId = "PhotoCell"
 
 /// 触发dismiss的Scale大小
