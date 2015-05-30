@@ -233,7 +233,7 @@ class PhotoBrowserController: UIViewController {
         // 一张图
         if self.photoes!.count == 1 {
             // 判断是否给定大小
-            if singleImageSize == nil {
+            if singleImageSize == nil || singleImageSize == CGSizeMake(0, 0){
                 let size = CGSizeMake(itemWidth * 2, itemHeight * 2)
                 collectionViewHeight?.constant = size.height
                 collectionViewWidth?.constant = size.width
