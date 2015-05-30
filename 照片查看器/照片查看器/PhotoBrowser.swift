@@ -1,6 +1,6 @@
 //
 //  PhotoBrowser.swift
-//  照片查看器
+//
 //
 //  Created by Jiajun Zheng on 15/5/24.
 //  Copyright (c) 2015年 hgProject. All rights reserved.
@@ -37,6 +37,9 @@ import SDWebImage
     
     /// 下载指示器颜色
     optional func PhotoBrowerControllerSetActivityLineColor(photoBrowserController:PhotoBrowserController) -> UIColor
+    
+    /// 是否需要保存按钮 默认需要
+    optional func PhotoBrowerControllerWhetherNeedSaveButton(photoBrowserController:PhotoBrowserController) -> Bool
     
 }
 /** 展示小图的控制器
@@ -156,6 +159,10 @@ class PhotoBrowserController: UIViewController {
         /// 指示器背景颜色
         if let result = self.delegate!.PhotoBrowerControllerSetActivityBackgroundColor?(self){
             activityBackgroundColor = result
+        }
+        /// 是否需要保存功能
+        if let result = self.delegate!.PhotoBrowerControllerWhetherNeedSaveButton?(self){
+            needSaveButton = result
         }
     }
     // 销毁注册的通知
@@ -556,16 +563,18 @@ class PhotoBrowserViewController: UIViewController {
         view.addSubview(self.collectionView)
         // 创建约束
         var cons = [AnyObject]()
-        cons += NSLayoutConstraint.constraintsWithVisualFormat("H:|-20-[closeBtn(80)]-10-[saveBtn(80)]", options: NSLayoutFormatOptions(0), metrics: nil, views: ["closeBtn" : closeBtn, "saveBtn" : saveBtn])
+        cons += NSLayoutConstraint.constraintsWithVisualFormat("H:|-10-[closeBtn(60)]-10-[saveBtn(60)]", options: NSLayoutFormatOptions(0), metrics: nil, views: ["closeBtn" : closeBtn, "saveBtn" : saveBtn])
         
         cons += NSLayoutConstraint.constraintsWithVisualFormat("V:[closeBtn]-20-|", options: NSLayoutFormatOptions(0), metrics: nil, views: ["closeBtn" : closeBtn])
         
         cons += NSLayoutConstraint.constraintsWithVisualFormat("V:[saveBtn]-20-|", options: NSLayoutFormatOptions(0), metrics: nil, views: ["saveBtn" : saveBtn])
         // 添加约束
         view.addConstraints(cons)
-        
+        // 判断是否需要save按钮
+        saveBtn.hidden = !needSaveButton
         // 监听方法
         closeBtn.addTarget(self, action: "close", forControlEvents: UIControlEvents.TouchUpInside)
+        saveBtn.addTarget(self, action: "save", forControlEvents: UIControlEvents.TouchUpInside)
     }
     override func viewDidLoad() {
         // 注册cell
@@ -596,6 +605,24 @@ class PhotoBrowserViewController: UIViewController {
         // 发送开始关闭通知
         NSNotificationCenter.defaultCenter().postNotificationName(PhotoBrowserStartDismissNotification, object: nil, userInfo: ["index": index])
     }
+    /// save
+    func save(){
+        // 根据索引计算当前浏览的图片
+        let index = calculateIndex()
+        let photo = self.photoes![index]
+        // 获取具体图片，因为能点击肯定已经得到大图
+        let image = SDWebImageManager.sharedManager().imageCache.imageFromDiskCacheForKey(photo.largeURL.absoluteString)
+        // 存入相册
+        UIImageWriteToSavedPhotosAlbum(image, self, "image:didFinishSavingWithError:contextInfo:", nil)
+    }
+    /// 图像保存的回调方法
+    func image(image: UIImage, didFinishSavingWithError error: NSError?, contextInfo: AnyObject){
+        if error != nil {
+            println("失败")
+            return
+        }
+        println("成功")
+    }
     func didDismiss(){
         dismissViewControllerAnimated(false, completion: nil)
     }
@@ -615,7 +642,7 @@ class PhotoBrowserViewController: UIViewController {
         btn.setTitle(title, forState: UIControlState.Normal)
         btn.setTitleColor(UIColor.whiteColor(), forState: UIControlState.Normal)
         btn.setTitleColor(UIColor.grayColor(), forState: UIControlState.Disabled)
-        btn.backgroundColor = UIColor(red: 0, green: 0, blue: 0, alpha: 0.2)
+        btn.backgroundColor = UIColor(red: 0, green: 0, blue: 0, alpha: 0.4)
         view.addSubview(btn)
         // 设置自动布局须关闭
         btn.setTranslatesAutoresizingMaskIntoConstraints(false)
@@ -626,12 +653,27 @@ class PhotoBrowserViewController: UIViewController {
         let scale = noti.userInfo!["scale"] as! CGFloat
         // 隐藏关闭按钮
         closeBtn.hidden = scale < dismissScale
-        saveBtn.hidden = scale < dismissScale
+        // 如果不需要保存按钮，会一直隐藏
+        saveBtn.hidden = scale < dismissScale || !needSaveButton
         collectionView.backgroundView?.alpha = scale
     }
     /// 检查按钮
     func checkSaveBtn() {
         self.scrollViewDidScroll(self.collectionView)
+    }
+    /// 根据contentOffset 计算哪个cell 正在显示
+    func calculateIndex() -> Int{
+        let sWidth = UIScreen.mainScreen().bounds.width
+        let offset = collectionView.contentOffset.x
+        let index = Int((offset + (sWidth * CGFloat(0.5))) / sWidth)
+        // 防止索引越界
+        if index < 0 {
+            return 0
+        }
+        if index > self.photoes?.count {
+            return self.photoes!.count
+        }
+        return index
     }
 }
 //MARK: - PhotoBrowserViewController的数据源方法
@@ -656,9 +698,7 @@ extension PhotoBrowserViewController: UICollectionViewDataSource {
 //MARK: - PhotoBrowserViewController的代理方法
 extension PhotoBrowserViewController: UICollectionViewDelegate {
     func scrollViewDidScroll(scrollView: UIScrollView) {
-        let sWidth = UIScreen.mainScreen().bounds.width
-        let offset = scrollView.contentOffset.x
-        let index = Int((offset + (sWidth * CGFloat(0.5))) / sWidth)
+        let index = calculateIndex()
         let photo = self.photoes![index]
         saveBtn.enabled = SDWebImageManager.sharedManager().cachedImageExistsForURL(photo.largeURL)
         println(saveBtn.enabled)
@@ -976,3 +1016,5 @@ private var placeHolderImage : UIImage = {
 private var activityLineWidth : CGFloat = 5.0
 private var activityLineColor = UIColor.whiteColor()
 private var activityBackgroundColor = UIColor(red: 0, green: 0, blue: 0, alpha: 0.4)
+/// 是否需要保存功能
+private var needSaveButton = true
