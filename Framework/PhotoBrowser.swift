@@ -720,7 +720,7 @@ class PhotoBrowserViewController: UIViewController {
             return 0
         }
         if index > self.photoes?.count {
-            return self.photoes!.count
+            return self.photoes!.count - 1 
         }
         return index
     }
