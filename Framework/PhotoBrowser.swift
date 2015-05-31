@@ -633,7 +633,7 @@ class PhotoBrowserViewController: UIViewController {
     func image(image: UIImage, didFinishSavingWithError error: NSError?, contextInfo: AnyObject){
         if error != nil {
             // 展示失败
-            self.view.addSubview(self.statusView)
+            UIApplication.sharedApplication().keyWindow!.addSubview(self.statusView)
             self.statusView.text = "保存失败"
             // 展示动画
             UIView.animateWithDuration(0.5, animations: { () -> Void in
@@ -654,7 +654,7 @@ class PhotoBrowserViewController: UIViewController {
         photo.isSaved = true
         checkSaveBtn()
         self.statusView.alpha = 0
-        self.view.addSubview(self.statusView)
+        UIApplication.sharedApplication().keyWindow!.addSubview(self.statusView)
         self.statusView.text = "保存成功"
         
         // 展示动画
@@ -720,7 +720,7 @@ class PhotoBrowserViewController: UIViewController {
             return 0
         }
         if index > self.photoes?.count {
-            return self.photoes!.count - 1 
+            return self.photoes!.count - 1
         }
         return index
     }
