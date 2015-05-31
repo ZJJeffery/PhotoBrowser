@@ -17,8 +17,8 @@
 		965807001B1B2D2F00254050 /* DemoTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 965806FC1B1B2D2F00254050 /* DemoTableViewController.swift */; };
 		965807011B1B2D2F00254050 /* Picture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 965806FD1B1B2D2F00254050 /* Picture.swift */; };
 		965807021B1B2D2F00254050 /* pictures.plist in Resources */ = {isa = PBXBuildFile; fileRef = 965806FE1B1B2D2F00254050 /* pictures.plist */; };
-		966322C11B1B314D00AC0903 /* image.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 966322BF1B1B314D00AC0903 /* image.bundle */; };
-		966322C21B1B314D00AC0903 /* PhotoBrowser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 966322C01B1B314D00AC0903 /* PhotoBrowser.swift */; };
+		966322C61B1B31E100AC0903 /* image.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 966322C41B1B31E100AC0903 /* image.bundle */; };
+		966322C71B1B31E100AC0903 /* PhotoBrowser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 966322C51B1B31E100AC0903 /* PhotoBrowser.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -47,8 +47,8 @@
 		965806FC1B1B2D2F00254050 /* DemoTableViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DemoTableViewController.swift; sourceTree = "<group>"; };
 		965806FD1B1B2D2F00254050 /* Picture.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Picture.swift; sourceTree = "<group>"; };
 		965806FE1B1B2D2F00254050 /* pictures.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = pictures.plist; sourceTree = "<group>"; };
-		966322BF1B1B314D00AC0903 /* image.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = image.bundle; sourceTree = "<group>"; };
-		966322C01B1B314D00AC0903 /* PhotoBrowser.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PhotoBrowser.swift; sourceTree = "<group>"; };
+		966322C41B1B31E100AC0903 /* image.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = image.bundle; sourceTree = "<group>"; };
+		966322C51B1B31E100AC0903 /* PhotoBrowser.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PhotoBrowser.swift; sourceTree = "<group>"; };
 		C45F7CD59542764F18FE97BC /* Pods.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -103,7 +103,7 @@
 		965806D61B1B2CE200254050 /* PhotoBrowser */ = {
 			isa = PBXGroup;
 			children = (
-				966322BE1B1B314D00AC0903 /* Framework */,
+				966322C31B1B31E100AC0903 /* Framework */,
 				965806D91B1B2CE200254050 /* AppDelegate.swift */,
 				965806F91B1B2D1700254050 /* Main.storyboard */,
 				965806FB1B1B2D2F00254050 /* DemoCell.swift */,
@@ -142,14 +142,15 @@
 			name = "Supporting Files";
 			sourceTree = "<group>";
 		};
-		966322BE1B1B314D00AC0903 /* Framework */ = {
+		966322C31B1B31E100AC0903 /* Framework */ = {
 			isa = PBXGroup;
 			children = (
-				966322BF1B1B314D00AC0903 /* image.bundle */,
-				966322C01B1B314D00AC0903 /* PhotoBrowser.swift */,
+				966322C41B1B31E100AC0903 /* image.bundle */,
+				966322C51B1B31E100AC0903 /* PhotoBrowser.swift */,
 			);
-			path = Framework;
-			sourceTree = SOURCE_ROOT;
+			name = Framework;
+			path = ../../Framework;
+			sourceTree = "<group>";
 		};
 		B3B30447290A6BCB942E7683 /* Frameworks */ = {
 			isa = PBXGroup;
@@ -245,7 +246,7 @@
 				965806FA1B1B2D1700254050 /* Main.storyboard in Resources */,
 				965806E41B1B2CE200254050 /* LaunchScreen.xib in Resources */,
 				965806E11B1B2CE200254050 /* Images.xcassets in Resources */,
-				966322C11B1B314D00AC0903 /* image.bundle in Resources */,
+				966322C61B1B31E100AC0903 /* image.bundle in Resources */,
 				965807021B1B2D2F00254050 /* pictures.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -312,7 +313,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				966322C21B1B314D00AC0903 /* PhotoBrowser.swift in Sources */,
+				966322C71B1B31E100AC0903 /* PhotoBrowser.swift in Sources */,
 				965807011B1B2D2F00254050 /* Picture.swift in Sources */,
 				965806FF1B1B2D2F00254050 /* DemoCell.swift in Sources */,
 				965806DA1B1B2CE200254050 /* AppDelegate.swift in Sources */,
