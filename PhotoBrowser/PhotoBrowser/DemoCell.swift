@@ -17,6 +17,7 @@ class DemoCell: UITableViewCell, PhotoBrowserControllerDelegate {
     
     var photoView : UIView?
     
+    var singleImageSize: CGSize?
     /// 图片资源
     var photoes : [Picture]? {
         didSet {
@@ -35,14 +36,28 @@ class DemoCell: UITableViewCell, PhotoBrowserControllerDelegate {
     // 测试数组
     override func awakeFromNib() {
         super.awakeFromNib()
+        // 添加控制器
         let photoVC = PhotoBrowserController()
+        // 一般不需要设置，如有需要的其他属性改变，可以实现特定的代理方法
         photoVC.delegate = self
+        // 记录控制器
         self.photoVC = photoVC
+        // 添加视图
         photoView = photoVC.view
         self.contentView.addSubview(photoView!)
-        setPropertys()
         // 添加约束
         addConstraint()
+        // 添加只有一张图片的时候的大小,该示例未赋值该属性
+        photoVC.singleImageSize = singleImageSize
+    }
+
+    // 添加约束，须手动添加约束，内部长宽属性已经被设置好了，会根据具体图片数目做出判断
+    private func addConstraint(){
+        var cons = [AnyObject]()
+        // 位置约束
+        cons.append(NSLayoutConstraint(item: self.photoView!, attribute: NSLayoutAttribute.Top, relatedBy: NSLayoutRelation.Equal, toItem: self.titleLabel, attribute: NSLayoutAttribute.Bottom, multiplier: 1, constant: 10))
+        cons.append(NSLayoutConstraint(item: self.photoView!, attribute: NSLayoutAttribute.Leading, relatedBy: NSLayoutRelation.Equal, toItem: self.titleLabel, attribute: NSLayoutAttribute.Leading, multiplier: 1, constant: 0))
+        self.contentView.addConstraints(cons)
     }
     
     func rowHeight(photoes : [Picture]) -> CGFloat {
@@ -51,16 +66,5 @@ class DemoCell: UITableViewCell, PhotoBrowserControllerDelegate {
         return CGRectGetMaxY(self.photoView!.frame) + CGFloat(20.0)
     }
     
-    // 添加约束
-    private func addConstraint(){
-        var cons = [AnyObject]()
-        cons.append(NSLayoutConstraint(item: self.photoView!, attribute: NSLayoutAttribute.Top, relatedBy: NSLayoutRelation.Equal, toItem: self.titleLabel, attribute: NSLayoutAttribute.Bottom, multiplier: 1, constant: 10))
-        cons.append(NSLayoutConstraint(item: self.photoView!, attribute: NSLayoutAttribute.Leading, relatedBy: NSLayoutRelation.Equal, toItem: self.titleLabel, attribute: NSLayoutAttribute.Leading, multiplier: 1, constant: 0))
-        self.contentView.addConstraints(cons)
-    }
-    // 设置视图属性
-    private func setPropertys() {
-//        photoVC?.itemSize = CGSizeMake(180, 180)
-    }
 
 }
