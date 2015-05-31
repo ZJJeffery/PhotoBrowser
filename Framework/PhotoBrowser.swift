@@ -546,9 +546,22 @@ class PhotoBrowserViewController: UIViewController {
     lazy var closeBtn : UIButton = {
         return self.createButton("关闭")
         }()
+    /// 保存按钮
     lazy var saveBtn : UIButton = {
         return self.createButton("保存")
     }()
+    /// 保存按钮的提示视图
+    lazy var statusView: UILabel = {
+        let label = UILabel(frame: CGRectMake(0, 0, 90, 60))
+        label.backgroundColor = UIColor(red: 0, green: 0, blue: 0, alpha: 0.4)
+        label.textColor = UIColor.whiteColor()
+        label.center = self.view.center
+        label.textAlignment = NSTextAlignment.Center
+        label.layer.cornerRadius = 10
+        label.layer.masksToBounds = true
+        return label
+    }()
+    
     /// 浏览的位置
     var index : Int?
     /// 所有frame对于主视图的位置
@@ -607,8 +620,9 @@ class PhotoBrowserViewController: UIViewController {
     }
     /// save
     func save(){
+        // 判断是否需要进行保存
         // 根据索引计算当前浏览的图片
-        let index = calculateIndex()
+        var index = calculateIndex()
         let photo = self.photoes![index]
         // 获取具体图片，因为能点击肯定已经得到大图
         let image = SDWebImageManager.sharedManager().imageCache.imageFromDiskCacheForKey(photo.largeURL.absoluteString)
@@ -618,10 +632,43 @@ class PhotoBrowserViewController: UIViewController {
     /// 图像保存的回调方法
     func image(image: UIImage, didFinishSavingWithError error: NSError?, contextInfo: AnyObject){
         if error != nil {
-            println("失败")
+            // 展示失败
+            self.view.addSubview(self.statusView)
+            self.statusView.text = "保存失败"
+            // 展示动画
+            UIView.animateWithDuration(0.5, animations: { () -> Void in
+                self.statusView.alpha = 1
+                }) { (_) -> Void in
+                    UIView.animateWithDuration(0.5, delay: 0.5, options: UIViewAnimationOptions.allZeros, animations: { () -> Void in
+                        self.statusView.alpha = 0
+                        }, completion: { (_) -> Void in
+                            self.statusView.removeFromSuperview()
+                            self.statusView.alpha = 1
+                    })
+            }
             return
         }
-        println("成功")
+        // 展示成功
+        var index = calculateIndex()
+        let photo = self.photoes![index]
+        photo.isSaved = true
+        checkSaveBtn()
+        self.statusView.alpha = 0
+        self.view.addSubview(self.statusView)
+        self.statusView.text = "保存成功"
+        
+        // 展示动画
+        UIView.animateWithDuration(0.2, animations: { () -> Void in
+            self.statusView.alpha = 1
+        }) { (_) -> Void in
+            UIView.animateWithDuration(0.5, delay: 0.5, options: UIViewAnimationOptions.allZeros, animations: { () -> Void in
+                self.statusView.alpha = 0
+            }, completion: { (_) -> Void in
+                self.statusView.removeFromSuperview()
+                self.statusView.alpha = 1
+            })
+        }
+        
     }
     func didDismiss(){
         dismissViewControllerAnimated(false, completion: nil)
@@ -651,10 +698,12 @@ class PhotoBrowserViewController: UIViewController {
     /// 开始缩放的通知方法
     func didScale(noti : NSNotification){
         let scale = noti.userInfo!["scale"] as! CGFloat
+        let index = noti.userInfo!["index"] as! Int
+        let photo = photoes![index]
         // 隐藏关闭按钮
         closeBtn.hidden = scale < dismissScale
         // 如果不需要保存按钮，会一直隐藏
-        saveBtn.hidden = scale < dismissScale || !needSaveButton
+        saveBtn.hidden = scale < dismissScale || !needSaveButton || photo.isSaved
         collectionView.backgroundView?.alpha = scale
     }
     /// 检查按钮
@@ -701,6 +750,7 @@ extension PhotoBrowserViewController: UICollectionViewDelegate {
         let index = calculateIndex()
         let photo = self.photoes![index]
         saveBtn.enabled = SDWebImageManager.sharedManager().cachedImageExistsForURL(photo.largeURL)
+        saveBtn.hidden = photo.isSaved
     }
     
 }
@@ -937,6 +987,8 @@ class Photo: NSObject {
     var smallURL: NSURL
     // 大图地址
     var largeURL: NSURL
+    // 判断是否已经保存
+    var isSaved : Bool = false
     //内部方法
     /// 初始化方法
     init(smallURL : NSURL, largeURL : NSURL){
