@@ -186,9 +186,9 @@ class PhotoBrowserController: UIViewController {
     // 添加约束
     private func addconstraints() {
         // 开启自动布局属性
-        collectionView?.setTranslatesAutoresizingMaskIntoConstraints(false)
+        collectionView?.translatesAutoresizingMaskIntoConstraints = false
         // 创建约束
-        var cons = [AnyObject]()
+        var cons = [NSLayoutConstraint]()
         // 添加约束
         // 宽高约束
         collectionViewHeight = NSLayoutConstraint(item: collectionView!, attribute: NSLayoutAttribute.Height, relatedBy: NSLayoutRelation.Equal, toItem: nil, attribute: NSLayoutAttribute.NotAnAttribute, multiplier: 1, constant: 0)
@@ -278,7 +278,7 @@ class PhotoBrowserController: UIViewController {
     // 根据cell 计算cell对于主屏幕的frame
     private func cellEndFrame(cell : PhotoCell) ->CGRect {
         let image = cell.imageView!.image!
-        var size = scaleImageSize(image, relateToWidth: UIScreen.mainScreen().bounds.width)
+        let size = scaleImageSize(image, relateToWidth: UIScreen.mainScreen().bounds.width)
         var y = (UIScreen.mainScreen().bounds.height - size.height) * 0.5
         if size.height > UIScreen.mainScreen().bounds.height {
             y = 0
@@ -409,7 +409,7 @@ class PhotoBrowserController: UIViewController {
         // 开始frame
         let startFrame = startFrameList![indexPath.item]
         let imageView = UIImageView(frame: startFrame)
-        var endFrame = endFrameList![indexPath.item]
+        let endFrame = endFrameList![indexPath.item]
         let photo = self.photoes![indexPath.item]
         let url = photo.smallURL
         imageView.sd_setImageWithURL(url, placeholderImage: placeHolderImage)
@@ -575,12 +575,12 @@ class PhotoBrowserViewController: UIViewController {
         view.backgroundColor = UIColor.clearColor()
         view.addSubview(self.collectionView)
         // 创建约束
-        var cons = [AnyObject]()
-        cons += NSLayoutConstraint.constraintsWithVisualFormat("H:|-10-[closeBtn(60)]-10-[saveBtn(60)]", options: NSLayoutFormatOptions(0), metrics: nil, views: ["closeBtn" : closeBtn, "saveBtn" : saveBtn])
+        var cons = [NSLayoutConstraint]()
+        cons += NSLayoutConstraint.constraintsWithVisualFormat("H:|-10-[closeBtn(60)]-10-[saveBtn(60)]", options: NSLayoutFormatOptions(rawValue: 0), metrics: nil, views: ["closeBtn" : closeBtn, "saveBtn" : saveBtn])
         
-        cons += NSLayoutConstraint.constraintsWithVisualFormat("V:[closeBtn]-20-|", options: NSLayoutFormatOptions(0), metrics: nil, views: ["closeBtn" : closeBtn])
+        cons += NSLayoutConstraint.constraintsWithVisualFormat("V:[closeBtn]-20-|", options: NSLayoutFormatOptions(rawValue: 0), metrics: nil, views: ["closeBtn" : closeBtn])
         
-        cons += NSLayoutConstraint.constraintsWithVisualFormat("V:[saveBtn]-20-|", options: NSLayoutFormatOptions(0), metrics: nil, views: ["saveBtn" : saveBtn])
+        cons += NSLayoutConstraint.constraintsWithVisualFormat("V:[saveBtn]-20-|", options: NSLayoutFormatOptions(rawValue: 0), metrics: nil, views: ["saveBtn" : saveBtn])
         // 添加约束
         view.addConstraints(cons)
         // 判断是否需要save按钮
@@ -597,7 +597,7 @@ class PhotoBrowserViewController: UIViewController {
     }
     override func viewDidLayoutSubviews() {
         let indexPath = NSIndexPath(forItem: index!, inSection: 0)
-        collectionView.scrollToItemAtIndexPath(indexPath, atScrollPosition: UICollectionViewScrollPosition.allZeros, animated: false)
+        collectionView.scrollToItemAtIndexPath(indexPath, atScrollPosition: UICollectionViewScrollPosition(), animated: false)
     }
     override func viewDidAppear(animated: Bool) {
         // 手动先检查保存按钮是否可以开启
@@ -611,7 +611,8 @@ class PhotoBrowserViewController: UIViewController {
     /// 关闭视图
     func close() {
         // 确定关闭的图像索引
-        let indexPath = collectionView.indexPathsForVisibleItems().last as! NSIndexPath
+//        let indexPath = collectionView.indexPathsForVisibleItems().last as! NSIndexPath
+        let indexPath : NSIndexPath = collectionView.indexPathsForVisibleItems().last!
         let index = indexPath.item
         let cell = collectionView.cellForItemAtIndexPath(indexPath)
         self.view.alpha = 0
@@ -622,7 +623,7 @@ class PhotoBrowserViewController: UIViewController {
     func save(){
         // 判断是否需要进行保存
         // 根据索引计算当前浏览的图片
-        var index = calculateIndex()
+        let index = calculateIndex()
         let photo = self.photoes![index]
         // 获取具体图片，因为能点击肯定已经得到大图
         let image = SDWebImageManager.sharedManager().imageCache.imageFromDiskCacheForKey(photo.largeURL.absoluteString)
@@ -639,7 +640,7 @@ class PhotoBrowserViewController: UIViewController {
             UIView.animateWithDuration(0.5, animations: { () -> Void in
                 self.statusView.alpha = 1
                 }) { (_) -> Void in
-                    UIView.animateWithDuration(0.5, delay: 0.5, options: UIViewAnimationOptions.allZeros, animations: { () -> Void in
+                    UIView.animateWithDuration(0.5, delay: 0.5, options: UIViewAnimationOptions(), animations: { () -> Void in
                         self.statusView.alpha = 0
                         }, completion: { (_) -> Void in
                             self.statusView.removeFromSuperview()
@@ -649,7 +650,7 @@ class PhotoBrowserViewController: UIViewController {
             return
         }
         // 展示成功
-        var index = calculateIndex()
+        let index = calculateIndex()
         let photo = self.photoes![index]
         photo.isSaved = true
         checkSaveBtn()
@@ -661,7 +662,7 @@ class PhotoBrowserViewController: UIViewController {
         UIView.animateWithDuration(0.2, animations: { () -> Void in
             self.statusView.alpha = 1
         }) { (_) -> Void in
-            UIView.animateWithDuration(0.5, delay: 0.5, options: UIViewAnimationOptions.allZeros, animations: { () -> Void in
+            UIView.animateWithDuration(0.5, delay: 0.5, options: UIViewAnimationOptions(), animations: { () -> Void in
                 self.statusView.alpha = 0
             }, completion: { (_) -> Void in
                 self.statusView.removeFromSuperview()
@@ -692,7 +693,7 @@ class PhotoBrowserViewController: UIViewController {
         btn.backgroundColor = UIColor(red: 0, green: 0, blue: 0, alpha: 0.4)
         view.addSubview(btn)
         // 设置自动布局须关闭
-        btn.setTranslatesAutoresizingMaskIntoConstraints(false)
+        btn.translatesAutoresizingMaskIntoConstraints = false
         return btn
     }
     /// 开始缩放的通知方法
@@ -784,7 +785,7 @@ class PhotoBrowserCell: UICollectionViewCell {
         // 添加视图
         self.addSubview(viewerVC!.view)
     }
-    required init(coder aDecoder: NSCoder) {
+    required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
     }
 }
@@ -846,7 +847,7 @@ class SinglePhotoBrowserViewController: UIViewController {
                 // 显示指示器
                 self.activity.hidden = false
                 // 下载大图
-                SDWebImageManager.sharedManager().downloadImageWithURL(largeURL, options: SDWebImageOptions.allZeros, progress: { (finished, total) -> Void in
+                SDWebImageManager.sharedManager().downloadImageWithURL(largeURL, options: SDWebImageOptions(), progress: { (finished, total) -> Void in
                     // 进度追踪
                     let progress = Double(finished) / Double(total) + 0.01
                     self.activity.progress = progress
@@ -864,7 +865,7 @@ class SinglePhotoBrowserViewController: UIViewController {
                     //如果大图出错，打印错误显示不给力
                     self.imageView.image = smallImage
                     self.setUpImage(smallImage)
-                    println("largeURL: \(self.largeURL) loadError: \(error)")
+                    print("largeURL: \(self.largeURL) loadError: \(error)")
                 })
                 return
             }
@@ -963,7 +964,7 @@ extension SinglePhotoBrowserViewController : UIScrollViewDelegate {
             scrollView.contentOffset = calculateContentOffset()
         }
     }
-    func scrollViewDidEndZooming(scrollView: UIScrollView, withView view: UIView!, atScale scale: CGFloat) {
+    func scrollViewDidEndZooming(scrollView: UIScrollView, withView view: UIView?, atScale scale: CGFloat) {
         if scale < dismissScale {
             NSNotificationCenter.defaultCenter().postNotificationName(PhotoBrowserStartInteractiveDismissNotification, object: nil, userInfo: ["scale" : scale, "index" : index!])
             dismissViewControllerAnimated(false, completion: nil)
@@ -971,7 +972,7 @@ extension SinglePhotoBrowserViewController : UIScrollViewDelegate {
         }
         // 重新调整图像的间距
         // 计算顶部的间距值
-        let top = (scrollView.frame.height - view.frame.height) * 0.5
+        let top = (scrollView.frame.height - view!.frame.height) * 0.5
         if top > 0 {
             scrollView.contentInset = UIEdgeInsetsMake(top, 0, 0, 0)
             return
@@ -1030,7 +1031,7 @@ class ActivityView: UIView {
         let path = UIBezierPath(arcCenter: centerPoint, radius: r, startAngle: start, endAngle: end, clockwise: true)
         
         path.lineWidth = lineWidth
-        path.lineCapStyle = kCGLineCapRound
+        path.lineCapStyle = CGLineCap.Round
         
         lineColor.setStroke()
         

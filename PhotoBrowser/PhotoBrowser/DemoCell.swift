@@ -53,7 +53,7 @@ class DemoCell: UITableViewCell, PhotoBrowserControllerDelegate {
 
     // 添加约束，须手动添加约束，内部长宽属性已经被设置好了，会根据具体图片数目做出判断
     private func addConstraint(){
-        var cons = [AnyObject]()
+        var cons = [NSLayoutConstraint]()
         // 位置约束
         cons.append(NSLayoutConstraint(item: self.photoView!, attribute: NSLayoutAttribute.Top, relatedBy: NSLayoutRelation.Equal, toItem: self.titleLabel, attribute: NSLayoutAttribute.Bottom, multiplier: 1, constant: 10))
         cons.append(NSLayoutConstraint(item: self.photoView!, attribute: NSLayoutAttribute.Leading, relatedBy: NSLayoutRelation.Equal, toItem: self.titleLabel, attribute: NSLayoutAttribute.Leading, multiplier: 1, constant: 0))
